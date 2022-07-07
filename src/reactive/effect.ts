@@ -1,22 +1,27 @@
 let activeEfffn;
 class EffectDepend {
   private _fn: Function;
-  constructor(fn: Function) {
+  constructor(fn: Function, public scheduler?) {
     this._fn = fn;
   }
   run() {
     activeEfffn = this;
-    this._fn();
+    return this._fn();
   }
+}
+
+export interface IeffectOptionsTypes {
+  scheduler?: () => any;
 }
 
 /**
  *
  * @param fn 需要执行的函数
  */
-export function effect(fn) {
-  const _effect = new EffectDepend(fn);
+export function effect(fn, options?: IeffectOptionsTypes) {
+  const _effect = new EffectDepend(fn, options?.scheduler);
   _effect.run();
+  return _effect.run.bind(_effect);
 }
 
 const targetMap = new Map();
@@ -62,7 +67,11 @@ export function trigger(target, key) {
   const dep = depsMap.get(key); //这里用可选运算符  因为没办法保证depsMap一定有对象
   if (dep) {
     for (const effect of dep) {
-      effect.run();
+      if (effect.scheduler) {
+        effect.scheduler();
+      } else {
+        effect.run();
+      }
     }
   }
 }
