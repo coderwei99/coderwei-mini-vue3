@@ -2,7 +2,8 @@ let activeEfffn;
 class EffectDepend {
   private _fn: Function;
   public active = true; //effect是否存活
-  public deps: Set<EffectDepend>[] = [];
+  public deps: Set<EffectDepend>[] = []; //存储依赖的集合  方便后续stop方法删除对应的依赖
+  onStop?: () => void; //挂载用户传入的onStop回调函数，在删除之后调用一次
   constructor(fn: Function, public scheduler?) {
     this._fn = fn;
   }
@@ -15,6 +16,7 @@ class EffectDepend {
     //为了从性能考虑没必要每次都执行 因为同一个依赖 删除一次就够了 所以这里进行判断 只有当前依赖存活的时候 才将其依赖 移除的同事将其设置为false(失活)
     if (this.active) {
       cleanupEffect(this);
+      this.onStop?.();
     }
   }
 }
@@ -33,6 +35,7 @@ export function cleanupEffect(effect: EffectDepend) {
 
 export interface IeffectOptionsTypes {
   scheduler?: () => any;
+  onStop?: () => void;
 }
 
 /**
@@ -46,6 +49,7 @@ export interface IeffectRunner<T = any> {
 
 export function effect<T = any>(fn: () => T, options?: IeffectOptionsTypes) {
   const _effect = new EffectDepend(fn, options?.scheduler);
+  _effect.onStop = options?.onStop;
   _effect.run();
   const runner = _effect.run.bind(_effect) as IeffectRunner;
   runner.effect = _effect;
