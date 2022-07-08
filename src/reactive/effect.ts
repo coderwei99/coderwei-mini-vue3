@@ -1,12 +1,33 @@
 let activeEfffn;
 class EffectDepend {
   private _fn: Function;
+  public active = true; //effect是否存活
+  public deps: Set<EffectDepend>[] = [];
   constructor(fn: Function, public scheduler?) {
     this._fn = fn;
   }
-  run() {
+  run(): any {
     activeEfffn = this;
     return this._fn();
+  }
+
+  stop() {
+    //为了从性能考虑没必要每次都执行 因为同一个依赖 删除一次就够了 所以这里进行判断 只有当前依赖存活的时候 才将其依赖 移除的同事将其设置为false(失活)
+    if (this.active) {
+      cleanupEffect(this);
+    }
+  }
+}
+
+/**
+ *
+ * @param effect 响应式实例
+ * 删除依赖
+ */
+export function cleanupEffect(effect: EffectDepend) {
+  for (const dep of effect.deps) {
+    dep.delete(effect);
+    effect.active = false;
   }
 }
 
@@ -18,10 +39,17 @@ export interface IeffectOptionsTypes {
  *
  * @param fn 需要执行的函数
  */
-export function effect(fn, options?: IeffectOptionsTypes) {
+export interface IeffectRunner<T = any> {
+  (): T;
+  effect: EffectDepend;
+}
+
+export function effect<T = any>(fn: () => T, options?: IeffectOptionsTypes) {
   const _effect = new EffectDepend(fn, options?.scheduler);
   _effect.run();
-  return _effect.run.bind(_effect);
+  const runner = _effect.run.bind(_effect) as IeffectRunner;
+  runner.effect = _effect;
+  return runner;
 }
 
 const targetMap = new Map();
@@ -55,6 +83,7 @@ export function track(target, key) {
     depsMap.set(key, dep);
   }
   dep.add(activeEfffn);
+  activeEfffn?.deps.push(dep);
 }
 
 /**
@@ -74,4 +103,12 @@ export function trigger(target, key) {
       }
     }
   }
+}
+
+/**
+ *
+ * @param runner effect的返回值
+ */
+export function stop(runner) {
+  runner.effect.stop();
 }
