@@ -20,6 +20,10 @@ export function createGetter<T extends object>(
       return isReadonly;
     } else if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly;
+    } else if (key === ReactiveFlags.IS_SHALLOW) {
+      return isShallow;
+    } else if (key === ReactiveFlags.IS_RAW) {
+      return target;
     }
 
     // 只读对象不需要收集依赖
@@ -80,12 +84,16 @@ export function readonly<T extends object>(raw: T) {
 export enum ReactiveFlags {
   IS_REACTIVE = "__v_isReactive",
   IS_READONLY = "__v_isReadonly",
+  IS_SHALLOW = "__v_isShallow",
+  IS_RAW = "__v_raw",
 }
 
 // 为value类型做批注，让value有属性可选，必选使用的时候提示value没有xxx属性
 export interface ITarget {
   [ReactiveFlags.IS_REACTIVE]?: boolean;
   [ReactiveFlags.IS_READONLY]?: boolean;
+  [ReactiveFlags.IS_SHALLOW]?: boolean;
+  [ReactiveFlags.IS_RAW]?: unknown;
 }
 
 // 判断是否是一个只读对象
@@ -96,6 +104,11 @@ export function isReadonly<T extends object>(value: unknown) {
 // 判断是否是一个响应式对象
 export function isReactive<T extends object>(value) {
   return !!(value as ITarget)[ReactiveFlags.IS_REACTIVE];
+}
+
+// 判断是否是一个shallow对象
+export function isShallow(value) {
+  return !!(value as ITarget)[ReactiveFlags.IS_SHALLOW];
 }
 
 // 定义shallowReadonly的handlers
