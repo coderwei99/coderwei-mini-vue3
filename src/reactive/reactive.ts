@@ -4,7 +4,16 @@ import { createReactiveObject } from "./baseHandlers";
 
 import { isObject } from "../shared/index";
 
-export function createGetter<T extends object>(isReadonly = false) {
+/**
+ *
+ * @param isReadonly 是否为只读对象
+ * @param isShallow 是否为shallowReadonly对象
+ * @returns
+ */
+export function createGetter<T extends object>(
+  isReadonly = false,
+  isShallow = false
+) {
   return function get(target: T, key: string | symbol) {
     const res = Reflect.get(target, key);
     if (key === ReactiveFlags.IS_READONLY) {
@@ -18,8 +27,8 @@ export function createGetter<T extends object>(isReadonly = false) {
       track(target, key);
     }
 
-    // 判断是否为嵌套对象 如果是嵌套对象 根据isReadonly判断递归调用readonly还是reactive
-    if (isObject(res)) {
+    //  判断是否为嵌套对象 如果是嵌套对象并且isShallow为默认值false  根据isReadonly判断递归调用readonly还是reactive
+    if (isObject(res) && !isShallow) {
       return isReadonly ? readonly(res) : reactive(res);
     }
     return res;
@@ -87,4 +96,21 @@ export function isReadonly<T extends object>(value: unknown) {
 // 判断是否是一个响应式对象
 export function isReactive<T extends object>(value) {
   return !!(value as ITarget)[ReactiveFlags.IS_REACTIVE];
+}
+
+// 定义shallowReadonly的handlers
+export const shallowReadonlyHandlers: ProxyHandler<Object> = {
+  get: createGetter(true, true),
+  set(target, key, val) {
+    console.warn(
+      `${target} do not set ${String(key)} value ${val}, because it is readonly`
+    );
+
+    return true;
+  },
+};
+
+// shallowReadonly的实现
+export function shallowReadonly<T extends object>(value: T) {
+  return createReactiveObject(value, shallowReadonlyHandlers);
 }
