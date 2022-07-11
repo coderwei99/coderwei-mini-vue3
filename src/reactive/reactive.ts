@@ -114,3 +114,14 @@ export const shallowReadonlyHandlers: ProxyHandler<Object> = {
 export function shallowReadonly<T extends object>(value: T) {
   return createReactiveObject(value, shallowReadonlyHandlers);
 }
+
+// 定义shallowReactive的handlers
+export const shallowReactiveHandlers: ProxyHandler<Object> = {
+  get: createGetter(false, true),
+  set,
+};
+
+// shallowReactive的实现
+export function shallowReactive<T extends object>(value: T) {
+  return createReactiveObject(value, shallowReactiveHandlers);
+}
