@@ -1,4 +1,5 @@
-let activeEfffn;
+let activeEffect;
+let shouldTrack: boolean = false;
 class EffectDepend {
   private _fn: Function;
   public active = true; //effect是否存活
@@ -8,8 +9,14 @@ class EffectDepend {
     this._fn = fn;
   }
   run(): any {
-    activeEfffn = this;
-    return this._fn();
+    if (!this.active) {
+      return this._fn();
+    }
+    activeEffect = this;
+    shouldTrack = true;
+    let returnValue = this._fn();
+    shouldTrack = false;
+    return returnValue;
   }
 
   stop() {
@@ -56,7 +63,31 @@ export function effect<T = any>(fn: () => T, options?: IeffectOptionsTypes) {
   return runner;
 }
 
+export type Dep = Set<EffectDepend>;
+// 抽离收集依赖  方便在ref函数中使用
+export function tarckEffect(dep: Dep) {
+  // 如果set中已经有了对应的activeEffect依赖 那么就不需要再次进行收集依赖
+  if (dep.has(activeEffect)) return;
+  dep.add(activeEffect);
+  activeEffect?.deps.push(dep);
+}
+
+// 抽离触发依赖 方便在ref函数中使用
+export function triggerEffect(dep: Dep) {
+  for (const effect of dep) {
+    if (effect.scheduler) {
+      effect.scheduler();
+    } else {
+      effect.run();
+    }
+  }
+}
+
 const targetMap = new Map();
+
+export function isTracking() {
+  return activeEffect !== undefined && shouldTrack;
+}
 
 /**
  *
@@ -64,6 +95,9 @@ const targetMap = new Map();
  * @param key 对应的key值
  */
 export function track(target, key) {
+  // 首先拦截不必要的依赖
+  if (!isTracking()) return;
+
   // target  --->  key ---> dep
   // 根据target源对象  拿到一个由key:响应式函数组成的set组成的map， 然后根据这个key获取到对应的set
   /**
@@ -86,8 +120,7 @@ export function track(target, key) {
     dep = new Set();
     depsMap.set(key, dep);
   }
-  dep.add(activeEfffn);
-  activeEfffn?.deps.push(dep);
+  tarckEffect(dep);
 }
 
 /**
@@ -99,13 +132,7 @@ export function trigger(target, key) {
   const depsMap = targetMap.get(target);
   const dep = depsMap.get(key); //这里用可选运算符  因为没办法保证depsMap一定有对象
   if (dep) {
-    for (const effect of dep) {
-      if (effect.scheduler) {
-        effect.scheduler();
-      } else {
-        effect.run();
-      }
-    }
+    triggerEffect(dep);
   }
 }
 
