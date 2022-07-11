@@ -7,10 +7,11 @@ export function createGetter<T extends object>(isReadonly = false) {
     const res = Reflect.get(target, key);
     if (key === "__v_isReadonly") {
       return isReadonly;
+    } else if (key === "__v_isReactive") {
+      return !isReadonly;
     }
-
-    // track
     if (!isReadonly) {
+      // track
       track(target, key);
     }
     return res;
@@ -56,9 +57,15 @@ export function readonly<T extends object>(raw: T) {
 // 为value类型做批注，让value有属性可选，必选使用的时候提示value没有xxx属性
 export interface ITarget {
   __v_isReadonly?: boolean;
+  __v_isReactive?: boolean;
 }
 
 // 判断是否是一个只读对象
 export function isReadonly<T extends object>(value: unknown) {
   return !!(value as ITarget)["__v_isReadonly"];
+}
+
+// 判断是否是一个响应式对象
+export function isReactive<T extends object>(value) {
+  return !!(value as ITarget)["__v_isReactive"];
 }

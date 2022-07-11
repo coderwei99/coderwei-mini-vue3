@@ -1,4 +1,4 @@
-import { readonly, isReadonly } from "../reactive";
+import { readonly, isReadonly, isReactive } from "../reactive";
 
 describe("readonly", () => {
   it("readonly not set", () => {
