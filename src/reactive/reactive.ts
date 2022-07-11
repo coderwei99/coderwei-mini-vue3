@@ -116,6 +116,12 @@ export function isProxy(value: unknown) {
   return isReactive(value) || isReadonly(value);
 }
 
+// toRaw方法
+export function toRaw(value) {
+  const raw = value && (value as ITarget)[ReactiveFlags.IS_RAW];
+  return raw ? raw : value;
+}
+
 // 定义shallowReadonly的handlers
 export const shallowReadonlyHandlers: ProxyHandler<Object> = {
   get: createGetter(true, true),
