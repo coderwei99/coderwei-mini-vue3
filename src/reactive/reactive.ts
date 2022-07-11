@@ -12,10 +12,13 @@ export function createGetter<T extends object>(isReadonly = false) {
     } else if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly;
     }
+
+    // 只读对象不需要收集依赖
     if (!isReadonly) {
-      // track
       track(target, key);
     }
+
+    // 判断是否为嵌套对象 如果是嵌套对象 根据isReadonly判断递归调用readonly还是reactive
     if (isObject(res)) {
       return isReadonly ? readonly(res) : reactive(res);
     }
