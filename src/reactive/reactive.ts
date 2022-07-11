@@ -31,15 +31,20 @@ export function createSetter<T extends object>() {
   };
 }
 
+// 执行一次createGetter/createSetter函数，避免每次调用一次
+const get = createGetter();
+const set = createSetter();
+const readonlyGet = createGetter(true);
+
 // reactive响应式对象的handle捕获器
 export const mutableHandlers: ProxyHandler<object> = {
-  get: createGetter(),
-  set: createSetter(),
+  get,
+  set,
 };
 
 // readonly只读对象的handle捕获器
 export const readonlyHandlers: ProxyHandler<object> = {
-  get: createGetter(true),
+  get: readonlyGet,
   set(target, key, val) {
     console.warn(
       `${target} do not set ${String(key)} value ${val}, because it is readonly`
