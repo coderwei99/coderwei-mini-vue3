@@ -5,9 +5,9 @@ import { createReactiveObject } from "./baseHandlers";
 export function createGetter<T extends object>(isReadonly = false) {
   return function get(target: T, key: string | symbol) {
     const res = Reflect.get(target, key);
-    if (key === "__v_isReadonly") {
+    if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly;
-    } else if (key === "__v_isReactive") {
+    } else if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly;
     }
     if (!isReadonly) {
@@ -54,18 +54,24 @@ export function readonly<T extends object>(raw: T) {
   return createReactiveObject<T>(raw, readonlyHandlers);
 }
 
+// 统一管理isReadonly&isReactive状态
+export enum ReactiveFlags {
+  IS_REACTIVE = "__v_isReactive",
+  IS_READONLY = "__v_isReadonly",
+}
+
 // 为value类型做批注，让value有属性可选，必选使用的时候提示value没有xxx属性
 export interface ITarget {
-  __v_isReadonly?: boolean;
-  __v_isReactive?: boolean;
+  [ReactiveFlags.IS_REACTIVE]?: boolean;
+  [ReactiveFlags.IS_REACTIVE]?: boolean;
 }
 
 // 判断是否是一个只读对象
 export function isReadonly<T extends object>(value: unknown) {
-  return !!(value as ITarget)["__v_isReadonly"];
+  return !!(value as ITarget)[ReactiveFlags.IS_READONLY];
 }
 
 // 判断是否是一个响应式对象
 export function isReactive<T extends object>(value) {
-  return !!(value as ITarget)["__v_isReactive"];
+  return !!(value as ITarget)[ReactiveFlags.IS_REACTIVE];
 }
