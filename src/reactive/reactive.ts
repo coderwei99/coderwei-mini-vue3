@@ -102,13 +102,18 @@ export function isReadonly<T extends object>(value: unknown) {
 }
 
 // 判断是否是一个响应式对象
-export function isReactive<T extends object>(value) {
+export function isReactive<T extends object>(value: unknown) {
   return !!(value as ITarget)[ReactiveFlags.IS_REACTIVE];
 }
 
 // 判断是否是一个shallow对象
-export function isShallow(value) {
+export function isShallow(value: unknown) {
   return !!(value as ITarget)[ReactiveFlags.IS_SHALLOW];
+}
+
+// 检查对象是否是由 reactive 或 readonly 创建的 proxy。
+export function isProxy(value: unknown) {
+  return isReactive(value) || isReadonly(value);
 }
 
 // 定义shallowReadonly的handlers

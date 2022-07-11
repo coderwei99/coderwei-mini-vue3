@@ -1,4 +1,10 @@
-import { reactive, readonly, isReadonly, isReactive } from "../reactive";
+import {
+  reactive,
+  readonly,
+  isReadonly,
+  isReactive,
+  isProxy,
+} from "../reactive";
 
 describe("readonly", () => {
   it("readonly not set", () => {
@@ -20,6 +26,7 @@ describe("readonly", () => {
     // 因为name是一个基本类型所以isObject会是false，暂时对name生成不了readonly，涉及到往后的知识点 isRef
     expect(isReadonly(warper.arr)).toBe(true);
     expect(isReadonly(warper.arr[0])).toBe(true);
+    expect(isProxy(warper)).toBe(true);
     expect(warper.foo.fuck.name).toBe("what");
   });
 
