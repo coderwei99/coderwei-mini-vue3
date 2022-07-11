@@ -2,6 +2,8 @@ import { track, trigger } from "./effect";
 
 import { createReactiveObject } from "./baseHandlers";
 
+import { isObject } from "../shared/index";
+
 export function createGetter<T extends object>(isReadonly = false) {
   return function get(target: T, key: string | symbol) {
     const res = Reflect.get(target, key);
@@ -13,6 +15,9 @@ export function createGetter<T extends object>(isReadonly = false) {
     if (!isReadonly) {
       // track
       track(target, key);
+    }
+    if (isObject(res)) {
+      return isReadonly ? readonly(res) : reactive(res);
     }
     return res;
   };
@@ -63,7 +68,7 @@ export enum ReactiveFlags {
 // 为value类型做批注，让value有属性可选，必选使用的时候提示value没有xxx属性
 export interface ITarget {
   [ReactiveFlags.IS_REACTIVE]?: boolean;
-  [ReactiveFlags.IS_REACTIVE]?: boolean;
+  [ReactiveFlags.IS_READONLY]?: boolean;
 }
 
 // 判断是否是一个只读对象
