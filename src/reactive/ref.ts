@@ -1,5 +1,5 @@
 import { isTracking, tarckEffect, triggerEffect } from "./effect";
-import { reactive } from "./reactive";
+import { isReactive, reactive } from "./reactive";
 import { Dep } from "./effect";
 import { isObject } from "../shared";
 class RefImpl<T> {
@@ -52,4 +52,23 @@ export function isRef(ref) {
 // unref的实现
 export function unref(ref) {
   return isRef(ref) ? ref.value : ref;
+}
+
+// proxyRefs的实现
+export function proxyRefs(value) {
+  return isReactive(value)
+    ? value
+    : new Proxy(value, {
+        get(target, key) {
+          return unref(Reflect.get(target, key));
+        },
+        set(target, key, value) {
+          if (isRef(target[key]) && !isRef(value)) {
+            target[key].value = value;
+            return true;
+          }
+
+          return Reflect.set(target, key, value);
+        },
+      });
 }
