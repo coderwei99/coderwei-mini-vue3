@@ -6,6 +6,7 @@ class RefImpl<T> {
   private _value: T;
   private _rawValue: T;
   public dep: Dep;
+  public __v_isRef = true;
   constructor(value: T) {
     this._value = convert(value);
     this._rawValue = value;
@@ -41,4 +42,9 @@ export function hasChanged(value, oldValue) {
 
 export function ref<T>(value: T) {
   return new RefImpl(value);
+}
+
+// isRef的实现
+export function isRef(ref) {
+  return !!(ref && ref.__v_isRef);
 }

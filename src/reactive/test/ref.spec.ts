@@ -1,5 +1,5 @@
 import { effect } from "../effect";
-import { ref } from "../ref";
+import { ref, isRef } from "../ref";
 describe("reactive", () => {
   it("should hold a value", () => {
     const a = ref(1);
@@ -24,5 +24,14 @@ describe("reactive", () => {
     // same value should not trigger
     a.value = 2;
     expect(calls).toBe(2);
+  });
+
+  test("isRef", () => {
+    expect(isRef(ref(1))).toBe(true);
+
+    expect(isRef(0)).toBe(false);
+    expect(isRef(1)).toBe(false);
+    // an object that looks like a ref isn't necessarily a ref
+    expect(isRef({ value: 0 })).toBe(false);
   });
 });
