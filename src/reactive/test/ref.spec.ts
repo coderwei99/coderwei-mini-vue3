@@ -1,5 +1,5 @@
 import { effect } from "../effect";
-import { ref, isRef } from "../ref";
+import { ref, isRef, unref } from "../ref";
 describe("reactive", () => {
   it("should hold a value", () => {
     const a = ref(1);
@@ -33,5 +33,7 @@ describe("reactive", () => {
     expect(isRef(1)).toBe(false);
     // an object that looks like a ref isn't necessarily a ref
     expect(isRef({ value: 0 })).toBe(false);
+    expect(unref(1)).toBe(1);
+    expect(unref(ref(1))).toBe(1);
   });
 });

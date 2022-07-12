@@ -48,3 +48,8 @@ export function ref<T>(value: T) {
 export function isRef(ref) {
   return !!(ref && ref.__v_isRef);
 }
+
+// unref的实现
+export function unref(ref) {
+  return isRef(ref) ? ref.value : ref;
+}
