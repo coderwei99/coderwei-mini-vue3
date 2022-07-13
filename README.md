@@ -11,6 +11,8 @@
 
 [崔学社](https://github.com/cuixiaorui/mini-vue)
 
+[Vue.js的设计与实现](https://item.jd.com/13611922.html)
+
 ## 🛠 功能清单
 reactivity部分
 
@@ -27,9 +29,9 @@ reactivity部分
 - [x] 实现 isProxy 功能
 - [x] 实现 isShallow 功能
 - [x] 实现 ref 功能
-- [ ] 实现 isRef 和 unRef 功能
-- [ ] 实现 proxyRefs 功能
-- [ ] 实现 computed 计算属性功能
+- [x] 实现 isRef 和 unRef 功能
+- [x] 实现 proxyRefs 功能
+- [x] 实现 computed 计算属性功能
 
 
 runtime-core部分
