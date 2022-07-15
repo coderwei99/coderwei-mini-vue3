@@ -1,6 +1,6 @@
 let activeEffect;
 let shouldTrack: boolean = false;
-class EffectDepend {
+export class EffectDepend {
   private _fn: Function;
   public active = true; //effect是否存活
   public deps: Set<EffectDepend>[] = []; //存储依赖的集合  方便后续stop方法删除对应的依赖

@@ -1,11 +1,24 @@
+import { EffectDepend } from "./effect";
+
 class ComputedRefImpl<T> {
   private _value!: T;
   public _getter: computedGetter<T>;
+  private _dirty = true;
+  private _effect: EffectDepend;
   constructor(get: computedGetter<T>, private set: computedSetter<T>) {
     this._getter = get;
+    this._effect = new EffectDepend(get, () => {
+      if (!this._dirty) {
+        this._dirty = true;
+      }
+    });
   }
   get value() {
-    this._value = this._getter();
+    if (this._dirty) {
+      this._dirty = false;
+      // this._value = this._getter();
+      this._value = this._effect.run();
+    }
     return this._value;
   }
   set value(newValue: T) {
