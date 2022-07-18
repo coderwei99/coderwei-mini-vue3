@@ -1,5 +1,5 @@
-import { createVNode } from "./index";
-import { render } from "./index";
+import { createVNode } from "./createVnode";
+import { render } from "./render";
 
 export function createApp(app: any) {
   const mount = (rootContainer: any) => {

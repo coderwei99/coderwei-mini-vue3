@@ -1,4 +1,4 @@
-import { patch } from "./index";
+import { patch } from "./patch";
 
 export function render(vnode, container) {
   // TODO

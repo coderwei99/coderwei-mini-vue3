@@ -1,6 +1,9 @@
-import { createVNode } from "./createVnode";
-import { render } from "./render";
-import { patch } from "./patch";
+/**
+ * 调用关系:
+ * h --> createVnode -->
+ *
+ */
+
 import { h } from "./h";
 
-export { createVNode, render, patch, h };
+export { h };

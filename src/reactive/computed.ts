@@ -26,9 +26,9 @@ class ComputedRefImpl<T> {
   }
 }
 
-type computedGetter<T> = (...args: any[]) => T;
+export type computedGetter<T> = (...args: any[]) => T;
 
-type computedSetter<T> = (v: T) => void;
+export type computedSetter<T> = (v: T) => void;
 
 export interface WritableComputedOptions<T> {
   get: computedGetter<T>;
