@@ -117,5 +117,8 @@ function mountElement(vnode: any, container: any) {
 
 // 处理children是数组的情况
 function mountChildren(vnode: any, container: any) {
-  patch(vnode, container);
+  // 走到这里说明vnode.children是数组 遍历添加到container
+  vnode.children.forEach(node => {
+    patch(node, container);
+  });
 }
