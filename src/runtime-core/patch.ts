@@ -6,8 +6,12 @@ export function patch(vnode: any, container: any) {
     processElement(vnode, container);
   } else if (isObject(vnode.type)) {
     // TODO 组件的情况
-    processComponent(vnode, container);
+    mountComponent(vnode, container);
   }
+}
+
+function mountComponent(vnode: any, container: any) {
+  processComponent(vnode, container);
 }
 
 function processComponent(vnode: any, container: any) {
