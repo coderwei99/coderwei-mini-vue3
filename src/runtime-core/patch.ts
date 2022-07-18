@@ -20,6 +20,9 @@ function processComponent(vnode: any, container: any) {
 
   // 安装组件
   setupComponent(instance);
+
+  // 对子树进行操作
+  setupRenderEffect(instance, container);
 }
 
 // 创建组件实例 本质上就是个对象 vnode+type
@@ -36,6 +39,12 @@ function createComponentInstance(vnode: any) {
 function setupComponent(instance: any) {
   // 初始化组件状态
   setupStateFulComponent(instance);
+}
+
+function setupRenderEffect(instance: any, container: any) {
+  const subTree = instance.render();
+  // 对子树进行patch操作
+  patch(subTree, container);
 }
 
 // 初始化组件状态函数
