@@ -1,4 +1,4 @@
-import { isObject, isFunction, isString } from "../shared";
+import { isObject, isFunction, isString } from "../shared/index";
 
 export function patch(vnode: any, container: any) {
   if (typeof vnode.type == "string") {

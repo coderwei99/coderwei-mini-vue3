@@ -4,6 +4,5 @@
  *
  */
 
-import { h } from "./h";
-
-export { h };
+export { createApp } from "./createApp";
+export { h } from "./h";
