@@ -3,6 +3,7 @@ import { isObject, isFunction } from "../shared";
 export function patch(vnode: any, container: any) {
   if (typeof vnode.type == "string") {
     // TODO 字符串 普通dom元素的情况
+    processElement(vnode, container);
   } else if (isObject(vnode.type)) {
     // TODO 组件的情况
     processComponent(vnode, container);
@@ -64,3 +65,10 @@ function finishComponentSetup(instance: any) {
     instance.render = component.render;
   }
 }
+
+// 加工type是string的情况
+function processElement(vnode: any, container: any) {
+  mountElement(vnode, container);
+}
+
+function mountElement(vnode: any, container: any) {}
