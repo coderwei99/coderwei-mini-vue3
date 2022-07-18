@@ -1,4 +1,4 @@
-import { isObject, isFunction } from "../shared";
+import { isObject, isFunction, isString } from "../shared";
 
 export function patch(vnode: any, container: any) {
   if (typeof vnode.type == "string") {
@@ -84,4 +84,38 @@ function processElement(vnode: any, container: any) {
   mountElement(vnode, container);
 }
 
-function mountElement(vnode: any, container: any) {}
+function mountElement(vnode: any, container: any) {
+  const el = document.createElement(vnode.type);
+
+  const { children, props } = vnode;
+  // children 可能是数组 也可能是字符串需要分开处理
+  if (isString(children)) {
+    el.textContent = children;
+  } else if (Array.isArray(children)) {
+    // 如果是数组 说明是一个嵌套dom元素
+    mountChildren(vnode, el);
+  }
+
+  // 处理props
+  for (const key of Object.getOwnPropertyNames(props)) {
+    if (Array.isArray(props[key])) {
+      // 数组的情况 比如说class 用户可能给多个class  所以说以空格进行分隔
+      /**
+       * example
+       * h('div',{class:['name','activeName']},'hello vue')
+       * 真实dom: <div class = 'name activeName'>hello vue</div>
+       */
+      el.setAttribute(key, props[key].join(" "));
+    } else {
+      // 单纯的字符串 直接添加属性即可
+      el.setAttribute(key, props[key]);
+    }
+  }
+  // 将创建的dom元素添加在父元素
+  container.append(el);
+}
+
+// 处理children是数组的情况
+function mountChildren(vnode: any, container: any) {
+  patch(vnode, container);
+}
