@@ -7,7 +7,7 @@ export default {
       class: ['flex', 'container-r']
     }, [
       h('p', { class: 'red' }, 'hello'),
-      h('p', { class: 'blue' }, 'my vue')
+      h('p', { class: 'blue' }, 'my vue'),
     ])
   },
   setup() {

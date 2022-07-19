@@ -1,11 +1,17 @@
-import { isObject, isFunction, isString } from "../shared/index";
+import { isObject, isFunction, isString, hasOwn } from "../shared/index";
+import { publicInstanceProxyHandlers } from "./commonsetupState";
 
 export function patch(vnode: any, container: any) {
+  console.log(vnode);
   if (typeof vnode.type == "string") {
     // TODO 字符串 普通dom元素的情况
+    console.log("type == string", vnode);
+
     processElement(vnode, container);
   } else if (isObject(vnode.type)) {
     // TODO 组件的情况
+    console.log("type == Object", vnode);
+
     mountComponent(vnode, container);
   }
 }
@@ -17,12 +23,13 @@ function mountComponent(vnode: any, container: any) {
 function processComponent(vnode: any, container: any) {
   // 创建组件实例
   const instance = createComponentInstance(vnode);
+  console.log(instance);
 
   // 安装组件
   setupComponent(instance);
 
   // 对子树进行操作
-  setupRenderEffect(instance, container);
+  setupRenderEffect(instance, vnode, container);
 }
 
 // 创建组件实例 本质上就是个对象 vnode+type
@@ -32,6 +39,8 @@ function createComponentInstance(vnode: any) {
     type,
     vnode,
   };
+  console.log("vnode", instance);
+
   return instance;
 }
 
@@ -41,16 +50,24 @@ function setupComponent(instance: any) {
   setupStateFulComponent(instance);
 }
 
-function setupRenderEffect(instance: any, container: any) {
-  const subTree = instance.render();
+function setupRenderEffect(instance: any, vnode: any, container: any) {
+  // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
+  const subTree = instance.render.call(instance.proxy);
+
   // 对子树进行patch操作
   patch(subTree, container);
+  // console.log(subTree);
+
+  vnode.el = subTree.el;
 }
 
 // 初始化组件状态函数
 function setupStateFulComponent(instance: any) {
   // type是我们创建实例的时候自己手动加上的  -->createComponentInstance函数
   const Component = instance.type;
+  instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandlers);
+  console.log("instance", instance);
+
   const { setup } = Component;
 
   // 考虑用户没有使用setup语法
