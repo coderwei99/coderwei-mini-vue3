@@ -1,15 +1,15 @@
 import { isObject, isFunction, isString, hasOwn } from "../shared/index";
 import { publicInstanceProxyHandlers } from "./commonsetupState";
 export function patch(vnode: any, container: any) {
-  console.log(vnode);
+  // console.log(vnode);
   if (typeof vnode.type == "string") {
     // TODO 字符串 普通dom元素的情况
-    console.log("type == string", vnode);
+    // console.log("type == string", vnode);
 
     processElement(vnode, container);
   } else if (isObject(vnode.type)) {
     // TODO 组件的情况
-    console.log("type == Object", vnode);
+    // console.log("type == Object", vnode);
 
     mountComponent(vnode, container);
   }
@@ -22,7 +22,7 @@ function mountComponent(vnode: any, container: any) {
 function processComponent(vnode: any, container: any) {
   // 创建组件实例
   const instance = createComponentInstance(vnode);
-  console.log(instance);
+  // console.log(instance);
 
   // 安装组件
   setupComponent(instance);
@@ -38,7 +38,7 @@ function createComponentInstance(vnode: any) {
     type,
     vnode,
   };
-  console.log("vnode", instance);
+  // console.log("vnode", instance);
 
   return instance;
 }
@@ -65,7 +65,7 @@ function setupStateFulComponent(instance: any) {
   // type是我们创建实例的时候自己手动加上的  -->createComponentInstance函数
   const Component = instance.type;
   instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandlers);
-  console.log("instance", instance);
+  // console.log("instance", instance);
 
   const { setup } = Component;
 
@@ -95,13 +95,17 @@ function finishComponentSetup(instance: any) {
   }
 }
 
+//判断字符串是否以on开头并且第三个字符为大写
+// example: onClick ==> true、 onclick ==> false
+export const isOn = (key: string) => /^on[A-Z]/.test(key);
+
 // 加工type是string的情况
 function processElement(vnode: any, container: any) {
   mountElement(vnode, container);
 }
 
 function mountElement(vnode: any, container: any) {
-  const el = document.createElement(vnode.type);
+  const el = document.createElement(vnode.type) as HTMLElement;
 
   const { children, props } = vnode;
   // children 可能是数组 也可能是字符串需要分开处理
@@ -122,6 +126,9 @@ function mountElement(vnode: any, container: any) {
        * 真实dom: <div class = 'name activeName'>hello vue</div>
        */
       el.setAttribute(key, props[key].join(" "));
+    } else if (isOn(key)) {
+      // 走到这里说明是事件 需要给dom元素添加对应的事件
+      el.addEventListener(key.slice(2).toLocaleLowerCase(), props[key]);
     } else {
       // 单纯的字符串 直接添加属性即可
       el.setAttribute(key, props[key]);

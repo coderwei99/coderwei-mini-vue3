@@ -4,7 +4,10 @@ export default {
   render() {
     return h('div', {
       id: 'root',
-      class: ['flex', 'container-r']
+      class: ['flex', 'container-r'],
+      onClick() {
+        console.log('click')
+      },
     }, [
       h('p', { class: 'red' }, 'hello'),
       h('p', { class: 'blue' }, 'my vue'),
