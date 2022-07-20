@@ -1,6 +1,5 @@
 import { isObject, isFunction, isString, hasOwn } from "../shared/index";
 import { publicInstanceProxyHandlers } from "./commonsetupState";
-
 export function patch(vnode: any, container: any) {
   console.log(vnode);
   if (typeof vnode.type == "string") {
