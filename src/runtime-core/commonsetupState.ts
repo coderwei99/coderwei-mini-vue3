@@ -1,11 +1,15 @@
 import { hasOwn } from "../shared/index";
 
 export const publicInstanceProxyHandlers: ProxyHandler<any> = {
-  get({ _: instance }, key) {
-    const { setupState } = instance;
+  get({ _: instance }, key: string) {
+    const { setupState, props } = instance;
+
     if (hasOwn(setupState, key)) {
       return setupState[key];
+    } else if (hasOwn(props, key)) {
+      console.log("hasown", Object.prototype.hasOwnProperty.call(props, key));
+      // 用户访问的key是props的某个key
+      return props[key];
     }
-    // 如果为false 说明用户访问的可能是$slots、props 等 这些元素不是挂载在setupState里面的 另外处理
   },
 };

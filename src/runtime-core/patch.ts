@@ -1,5 +1,9 @@
-import { isObject, isFunction, isString, hasOwn } from "../shared/index";
+import { shallowReadonly } from "../reactive/reactive";
+import { isObject, isFunction, isString } from "../shared/index";
 import { publicInstanceProxyHandlers } from "./commonsetupState";
+
+import { emit } from "./componentEmit";
+
 export function patch(vnode: any, container: any) {
   // console.log(vnode);
   if (typeof vnode.type == "string") {
@@ -37,14 +41,28 @@ function createComponentInstance(vnode: any) {
   const instance = {
     type,
     vnode,
+    props: {},
+    emit: () => {},
   };
   // console.log("vnode", instance);
+  // console.log("emit", emit);
+  // emit初始化
+  instance.emit = emit.bind(null, instance) as any;
+  console.log(instance);
 
   return instance;
 }
 
+export function initProps(instance: any, props: any) {
+  instance.props = props || {};
+}
+
 // 安装组件函数
 function setupComponent(instance: any) {
+  // console.log("setupComponent instance", instance);
+
+  // 初始化props
+  initProps(instance, instance.vnode.props);
   // 初始化组件状态
   setupStateFulComponent(instance);
 }
@@ -70,8 +88,13 @@ function setupStateFulComponent(instance: any) {
   const { setup } = Component;
 
   // 考虑用户没有使用setup语法
+
   if (setup) {
-    const setupResult = setup();
+    console.log("instance emit", instance.emit);
+
+    const setupResult = setup(shallowReadonly(instance.props), {
+      emit: instance.emit,
+    });
 
     // 这里考虑两种情况，一种是setup返回的是一个对象，那么可以将这个对象注入template上下文渲染，另一种是setup返回的是一个h函数，需要走render函数
     handleSetupResult(instance, setupResult);
