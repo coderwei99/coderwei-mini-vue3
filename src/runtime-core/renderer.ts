@@ -1,10 +1,12 @@
-import { shallowReadonly } from "../reactive/reactive";
-import { isObject, isFunction, isString } from "../shared/index";
-import { publicInstanceProxyHandlers } from "./commonsetupState";
+import { isObject, isString } from "../shared/index";
+import { createComponentInstance, setupComponent } from "./component";
 
-import { emit } from "./componentEmit";
+export function render(vnode, container) {
+  // TODO
+  patch(vnode, container);
+}
 
-export function patch(vnode: any, container: any) {
+function patch(vnode: any, container: any) {
   // console.log(vnode);
   if (typeof vnode.type == "string") {
     // TODO 字符串 普通dom元素的情况
@@ -35,38 +37,6 @@ function processComponent(vnode: any, container: any) {
   setupRenderEffect(instance, vnode, container);
 }
 
-// 创建组件实例 本质上就是个对象 vnode+type
-function createComponentInstance(vnode: any) {
-  const type = vnode.type;
-  const instance = {
-    type,
-    vnode,
-    props: {},
-    emit: () => {},
-  };
-  // console.log("vnode", instance);
-  // console.log("emit", emit);
-  // emit初始化
-  instance.emit = emit.bind(null, instance) as any;
-  console.log(instance);
-
-  return instance;
-}
-
-export function initProps(instance: any, props: any) {
-  instance.props = props || {};
-}
-
-// 安装组件函数
-function setupComponent(instance: any) {
-  // console.log("setupComponent instance", instance);
-
-  // 初始化props
-  initProps(instance, instance.vnode.props);
-  // 初始化组件状态
-  setupStateFulComponent(instance);
-}
-
 function setupRenderEffect(instance: any, vnode: any, container: any) {
   // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
   const subTree = instance.render.call(instance.proxy);
@@ -76,46 +46,6 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
   // console.log(subTree);
 
   vnode.el = subTree.el;
-}
-
-// 初始化组件状态函数
-function setupStateFulComponent(instance: any) {
-  // type是我们创建实例的时候自己手动加上的  -->createComponentInstance函数
-  const Component = instance.type;
-  instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandlers);
-  // console.log("instance", instance);
-
-  const { setup } = Component;
-
-  // 考虑用户没有使用setup语法
-
-  if (setup) {
-    console.log("instance emit", instance.emit);
-
-    const setupResult = setup(shallowReadonly(instance.props), {
-      emit: instance.emit,
-    });
-
-    // 这里考虑两种情况，一种是setup返回的是一个对象，那么可以将这个对象注入template上下文渲染，另一种是setup返回的是一个h函数，需要走render函数
-    handleSetupResult(instance, setupResult);
-  }
-  // 结束组件安装
-  finishComponentSetup(instance);
-}
-
-function handleSetupResult(instance: any, setupResult: any) {
-  if (isFunction(setupResult)) {
-    // TODO setup返回值是h函数的情况
-  } else if (isObject(setupResult)) {
-    instance.setupState = setupResult;
-  }
-}
-
-function finishComponentSetup(instance: any) {
-  const component = instance.type;
-  if (instance) {
-    instance.render = component.render;
-  }
 }
 
 //判断字符串是否以on开头并且第三个字符为大写

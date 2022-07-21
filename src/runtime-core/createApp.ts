@@ -1,5 +1,5 @@
 import { createVNode } from "./vnode";
-import { render } from "./render";
+import { render } from "./renderer";
 
 export function createApp(app: any) {
   // app就是我们app.js中导出的组件描述  可以说这个app会是最大的组件的描述  后续我们写的任何组件都在他的下层
