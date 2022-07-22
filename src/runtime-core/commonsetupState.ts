@@ -9,7 +9,7 @@ const publicPropertiesMap: PublicPropertiesMap = {
 export const publicInstanceProxyHandlers: ProxyHandler<any> = {
   get({ _: instance }, key: string) {
     const { setupState, props } = instance;
-    console.log("get", key);
+    // console.log("key", key);
 
     if (hasOwn(setupState, key)) {
       return setupState[key];
@@ -20,7 +20,6 @@ export const publicInstanceProxyHandlers: ProxyHandler<any> = {
     }
 
     const createGetter = publicPropertiesMap[key];
-    console.log(createGetter);
     // console.log(instance);
     if (createGetter) return createGetter(instance);
   },

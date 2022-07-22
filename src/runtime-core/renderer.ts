@@ -1,5 +1,6 @@
 import { isObject, isString } from "../shared/index";
 import { createComponentInstance, setupComponent } from "./component";
+import { Fragment, Text } from "./vnode";
 
 export function render(vnode, container) {
   // TODO
@@ -9,6 +10,14 @@ export function render(vnode, container) {
 function patch(vnode: any, container: any) {
   // console.log(vnode);
   if (!vnode) return;
+  // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
+  if (vnode.type == Fragment) {
+    mountChildren(vnode, container);
+  }
+  if (vnode.type == Text) {
+    processText(vnode, container);
+  }
+
   if (typeof vnode.type == "string") {
     // TODO 字符串 普通dom元素的情况
     // console.log("type == string", vnode);
@@ -95,7 +104,24 @@ function mountElement(vnode: any, container: any) {
 // 处理children是数组的情况
 function mountChildren(vnode: any, container: any) {
   // 走到这里说明vnode.children是数组 遍历添加到container
+  // console.log("1", vnode);
+
   vnode.children.forEach(node => {
+    // console.log("处理children是数组的情况", node);
+
     patch(node, container);
   });
+}
+
+// 处理文本节点
+function processText(vnode: any, container: any) {
+  mountText(vnode, container);
+}
+
+function mountText(vnode: any, container: any) {
+  // console.log("vnode", vnode);
+  // 因为经过createVNode 函数处理 所以返回的是一个对象  文本在vnode.children下面
+  const { children } = vnode;
+  const textNode = (vnode.el = document.createTextNode(children));
+  container.append(textNode);
 }

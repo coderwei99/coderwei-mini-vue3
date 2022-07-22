@@ -1,5 +1,7 @@
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { isObject, isString } from "../shared/index";
+export const Fragment = Symbol("Fragment");
+export const Text = Symbol("Text");
 
 export function createVNode(type, props?, children?) {
   const vnode = {
@@ -37,4 +39,9 @@ export function normalizeChildren(vnode: any, children: any) {
       vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.SLOTS_CHILDREN;
     }
   }
+}
+
+// 当用户传入文本的时候 需要创建一个虚拟节点 不然patch无法渲染的
+export function createTextVNode(text: string) {
+  return createVNode(Text, {}, text);
 }

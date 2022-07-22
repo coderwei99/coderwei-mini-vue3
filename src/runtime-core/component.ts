@@ -33,7 +33,7 @@ export function setupComponent(instance: any) {
 
   // 初始化slots
   initSlots(instance, instance.vnode.children);
-  console.log(instance);
+  // console.log(instance);
 
   // 初始化组件状态
   setupStateFulComponent(instance);

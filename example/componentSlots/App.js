@@ -13,7 +13,7 @@ export default {
       h('p', {
         class: 'blue'
       }, this.name),
-      h(Foo, {}, h('h1', {}, '我是slot1'))
+      h(Foo, {}, [h('p', {}, '我是slot1'), h('p', {}, '我是slot2')])
     ])
   },
   setup() {
