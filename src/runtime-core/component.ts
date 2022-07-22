@@ -3,6 +3,7 @@ import { shallowReadonly } from "../reactive/reactive";
 import { publicInstanceProxyHandlers } from "./commonsetupState";
 import { isObject, isFunction, isString } from "../shared/index";
 import { initProps } from "./componentProps";
+import { initSlots } from "./componentSlots";
 
 // 创建组件实例 本质上就是个对象 vnode+type
 export function createComponentInstance(vnode: any) {
@@ -12,6 +13,7 @@ export function createComponentInstance(vnode: any) {
     vnode,
     props: {},
     emit: () => {},
+    slots: {},
   };
   // console.log("vnode", instance);
   // console.log("emit", emit);
@@ -28,6 +30,11 @@ export function setupComponent(instance: any) {
 
   // 初始化props
   initProps(instance, instance.vnode.props);
+
+  // 初始化slots
+  initSlots(instance, instance.vnode.children);
+  console.log(instance);
+
   // 初始化组件状态
   setupStateFulComponent(instance);
 }

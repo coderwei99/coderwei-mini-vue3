@@ -8,6 +8,7 @@ export function render(vnode, container) {
 
 function patch(vnode: any, container: any) {
   // console.log(vnode);
+  if (!vnode) return;
   if (typeof vnode.type == "string") {
     // TODO 字符串 普通dom元素的情况
     // console.log("type == string", vnode);
