@@ -12,7 +12,9 @@ function patch(vnode: any, container: any) {
   if (!vnode) return;
   // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
   if (vnode.type == Fragment) {
-    mountChildren(vnode, container);
+    console.log(vnode, "vnode === far");
+
+    mountChildren(vnode.children, container);
   }
   if (vnode.type == Text) {
     processText(vnode, container);
@@ -76,7 +78,9 @@ function mountElement(vnode: any, container: any) {
     el.textContent = children;
   } else if (Array.isArray(children)) {
     // 如果是数组 说明是一个嵌套dom元素
-    mountChildren(vnode, el);
+    console.log("Array.isArray成立", children);
+
+    mountChildren(children, el);
   }
 
   // 处理props
@@ -102,11 +106,11 @@ function mountElement(vnode: any, container: any) {
 }
 
 // 处理children是数组的情况
-function mountChildren(vnode: any, container: any) {
+function mountChildren(children: any, container: any) {
   // 走到这里说明vnode.children是数组 遍历添加到container
-  // console.log("1", vnode);
+  // console.log(children, "children");
 
-  vnode.children.forEach(node => {
+  children.forEach(node => {
     // console.log("处理children是数组的情况", node);
 
     patch(node, container);

@@ -13,6 +13,9 @@ export function isString(value: unknown) {
   return typeof value == "string";
 }
 
+// 判断是否为数组
+export const isArray = Array.isArray;
+
 // 判断某个key是否在指定对象上
 export const hasOwn = (target: any, key: any) =>
   Object.prototype.hasOwnProperty.call(target, key);

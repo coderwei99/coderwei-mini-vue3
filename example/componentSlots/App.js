@@ -13,7 +13,10 @@ export default {
       h('p', {
         class: 'blue'
       }, this.name),
-      h(Foo, {}, [h('p', {}, '我是slot1'), h('p', {}, '我是slot2')])
+      h(Foo, {}, {
+        header: ({ age }) => h('p', {}, '我是header slot1--年龄：' + age),
+        footer: () => h('p', {}, '我是footer slot1')
+      })
     ])
   },
   setup() {

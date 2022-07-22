@@ -32,6 +32,8 @@ export function setupComponent(instance: any) {
   initProps(instance, instance.vnode.props);
 
   // 初始化slots
+  console.log("初始化slots之前", instance.vnode.children);
+
   initSlots(instance, instance.vnode.children);
   // console.log(instance);
 
