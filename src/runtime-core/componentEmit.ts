@@ -7,10 +7,10 @@ export function emit(instance: any, eventName: string, ...arg: unknown[]) {
 
   const event = toHandlerKey(camelCase(eventName));
 
-  console.log("event", event);
+  // console.log("event", event);
 
   const handle = props[event];
-  console.log(props, "props");
+  // console.log(props, "props");
 
   handle && handle(...arg);
 }

@@ -17,7 +17,7 @@ export function createComponentInstance(vnode: any) {
   // console.log("emit", emit);
   // emit初始化
   instance.emit = emit.bind(null, instance) as any;
-  console.log(instance);
+  // console.log(instance);
 
   return instance;
 }
@@ -44,7 +44,7 @@ function setupStateFulComponent(instance: any) {
   // 考虑用户没有使用setup语法
 
   if (setup) {
-    console.log("instance emit", instance.emit);
+    // console.log("instance emit", instance.emit);
 
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit,
