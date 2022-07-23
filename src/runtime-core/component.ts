@@ -5,6 +5,19 @@ import { isObject, isFunction, isString } from "../shared/index";
 import { initProps } from "./componentProps";
 import { initSlots } from "./componentSlots";
 
+// 保存组件实例  便于getCurrentInstance 中返回出去
+export let currentInstance = null;
+
+// 设置组件实例函数
+export function setCurrentInstance(instance: any) {
+  currentInstance = instance;
+}
+
+// 获取当期组件实例
+export function getCurrentInstance() {
+  return currentInstance;
+}
+
 // 创建组件实例 本质上就是个对象 vnode+type
 export function createComponentInstance(vnode: any) {
   const type = vnode.type;
@@ -54,13 +67,14 @@ function setupStateFulComponent(instance: any) {
 
   if (setup) {
     // console.log("instance emit", instance.emit);
-
+    setCurrentInstance(instance);
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit,
     });
 
     // 这里考虑两种情况，一种是setup返回的是一个对象，那么可以将这个对象注入template上下文渲染，另一种是setup返回的是一个h函数，需要走render函数
     handleSetupResult(instance, setupResult);
+    setCurrentInstance(null);
   }
   // 结束组件安装
   finishComponentSetup(instance);

@@ -1,4 +1,4 @@
-import { h, renderSlot, createTextVNode } from '../../lib/vue3.esm.js'
+import { h, renderSlot, getCurrentInstance } from '../../lib/vue3.esm.js'
 export default {
   name: "Foo",
   render() {
@@ -8,6 +8,7 @@ export default {
     return h('div', {}, [renderSlot(this.$slots, 'header', { age: 18 }), foo, renderSlot(this.$slots, 'footer')])
   },
   setup(props, { emit }) {
+    console.log('当前组件实例', getCurrentInstance());
     return {
     }
   }
