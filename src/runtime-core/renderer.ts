@@ -12,7 +12,7 @@ function patch(vnode: any, container: any) {
   if (!vnode) return;
   // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
   if (vnode.type == Fragment) {
-    console.log(vnode, "vnode === far");
+    // console.log(vnode, "vnode === far");
 
     mountChildren(vnode.children, container);
   }
@@ -78,7 +78,7 @@ function mountElement(vnode: any, container: any) {
     el.textContent = children;
   } else if (Array.isArray(children)) {
     // 如果是数组 说明是一个嵌套dom元素
-    console.log("Array.isArray成立", children);
+    // console.log("Array.isArray成立", children);
 
     mountChildren(children, el);
   }
