@@ -53,3 +53,8 @@ runtime-core部分
 - [ ] 更新 element 的 children
 - [ ] 更新 element 的双端对比 diff 算法
 - [ ] 实现组件更新功能
+
+
+## 遗留bug
+> 先走完整个流程，这里记录调试过程中发现的小bug，走完整个流程在处理这些bug，顺便迫使自己重新梳理整个流程
+1. 目前处理子组件children的逻辑有问题，当子组件的children为字符串的时候，渲染会出错
