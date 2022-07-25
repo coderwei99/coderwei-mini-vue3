@@ -4,7 +4,7 @@ export function isObject(value: unknown) {
 }
 
 // 判断是否是一个函数
-export function isFunction(value: unknown) {
+export function isFunction(value: unknown): boolean {
   return typeof value == "function";
 }
 

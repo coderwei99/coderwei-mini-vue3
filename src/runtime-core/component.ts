@@ -118,11 +118,17 @@ export function provide<T>(key: string | number, value: T) {
 }
 
 // inject 函数的实现
-export function inject(key: string | any) {
+export function inject(key: string | any, defaultValue?: any) {
   const currentInstance = getCurrentInstance();
   if (currentInstance) {
     const parentProvide = currentInstance.parent.provides;
-
-    return parentProvide[key];
+    if (key in parentProvide) {
+      return parentProvide[key];
+    } else {
+      if (isFunction(defaultValue)) {
+        return defaultValue();
+      }
+      return defaultValue;
+    }
   }
 }
