@@ -105,8 +105,8 @@ export function provide<T>(key: string | number, value: T) {
   if (currentInstance) {
     let { provides } = currentInstance;
     const parentProvides = currentInstance.parent?.provides;
-    console.log("provides", provides);
-    console.log("parentProvides", parentProvides);
+    // console.log("provides", provides);
+    // console.log("parentProvides", parentProvides);
 
     if (provides === parentProvides) {
       // 把provide原型指向父组件的provide
