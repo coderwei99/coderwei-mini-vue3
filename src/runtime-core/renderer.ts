@@ -4,17 +4,17 @@ import { Fragment, Text } from "./vnode";
 
 export function render(vnode, container) {
   // TODO
-  patch(vnode, container);
+  patch(vnode, container, null);
 }
 
-function patch(vnode: any, container: any) {
+function patch(vnode: any, container: any, parentComponent: any) {
   // console.log(vnode);
   if (!vnode) return;
   // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
   if (vnode.type == Fragment) {
     // console.log(vnode, "vnode === far");
 
-    mountChildren(vnode.children, container);
+    mountChildren(vnode.children, container, parentComponent);
   }
   if (vnode.type == Text) {
     processText(vnode, container);
@@ -24,22 +24,22 @@ function patch(vnode: any, container: any) {
     // TODO 字符串 普通dom元素的情况
     // console.log("type == string", vnode);
 
-    processElement(vnode, container);
+    processElement(vnode, container, parentComponent);
   } else if (isObject(vnode.type)) {
     // TODO 组件的情况
     // console.log("type == Object", vnode);
 
-    mountComponent(vnode, container);
+    mountComponent(vnode, container, parentComponent);
   }
 }
 
-function mountComponent(vnode: any, container: any) {
-  processComponent(vnode, container);
+function mountComponent(vnode: any, container: any, parentComponent: any) {
+  processComponent(vnode, container, parentComponent);
 }
 
-function processComponent(vnode: any, container: any) {
+function processComponent(vnode: any, container: any, parentComponent: any) {
   // 创建组件实例
-  const instance = createComponentInstance(vnode);
+  const instance = createComponentInstance(vnode, parentComponent);
   // console.log(instance);
 
   // 安装组件
@@ -50,11 +50,14 @@ function processComponent(vnode: any, container: any) {
 }
 
 function setupRenderEffect(instance: any, vnode: any, container: any) {
+  // console.log("sub", instance.render);
+
+  // console.log("sub", instance.render());
   // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
   const subTree = instance.render.call(instance.proxy);
 
   // 对子树进行patch操作
-  patch(subTree, container);
+  patch(subTree, container, instance);
   // console.log(subTree);
 
   vnode.el = subTree.el;
@@ -65,11 +68,11 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
 export const isOn = (key: string) => /^on[A-Z]/.test(key);
 
 // 加工type是string的情况
-function processElement(vnode: any, container: any) {
-  mountElement(vnode, container);
+function processElement(vnode: any, container: any, parentComponent: any) {
+  mountElement(vnode, container, parentComponent);
 }
 
-function mountElement(vnode: any, container: any) {
+function mountElement(vnode: any, container: any, parentComponent: any) {
   const el = document.createElement(vnode.type) as HTMLElement;
 
   const { children, props } = vnode;
@@ -80,7 +83,7 @@ function mountElement(vnode: any, container: any) {
     // 如果是数组 说明是一个嵌套dom元素
     // console.log("Array.isArray成立", children);
 
-    mountChildren(children, el);
+    mountChildren(children, el, parentComponent);
   }
 
   // 处理props
@@ -106,14 +109,14 @@ function mountElement(vnode: any, container: any) {
 }
 
 // 处理children是数组的情况
-function mountChildren(children: any, container: any) {
+function mountChildren(children: any, container: any, parentComponent: any) {
   // 走到这里说明vnode.children是数组 遍历添加到container
   // console.log(children, "children");
 
   children.forEach(node => {
     // console.log("处理children是数组的情况", node);
 
-    patch(node, container);
+    patch(node, container, parentComponent);
   });
 }
 

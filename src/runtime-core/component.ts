@@ -14,12 +14,12 @@ export function setCurrentInstance(instance: any) {
 }
 
 // 获取当期组件实例
-export function getCurrentInstance() {
+export function getCurrentInstance(): any {
   return currentInstance;
 }
 
 // 创建组件实例 本质上就是个对象 vnode+type
-export function createComponentInstance(vnode: any) {
+export function createComponentInstance(vnode: any, parentComponent: any) {
   const type = vnode.type;
   const instance = {
     type,
@@ -27,6 +27,10 @@ export function createComponentInstance(vnode: any) {
     props: {},
     emit: () => {},
     slots: {},
+    provides: parentComponent
+      ? parentComponent.provides
+      : ({} as Record<string, any>), //父组件提供的数据
+    parent: parentComponent, //父组件实例
   };
   // console.log("vnode", instance);
   // console.log("emit", emit);
@@ -92,5 +96,33 @@ function finishComponentSetup(instance: any) {
   const component = instance.type;
   if (instance) {
     instance.render = component.render;
+  }
+}
+
+// provide 函数的实现
+export function provide<T>(key: string | number, value: T) {
+  let currentInstance = getCurrentInstance();
+  if (currentInstance) {
+    let { provides } = currentInstance;
+    const parentProvides = currentInstance.parent?.provides;
+    console.log("provides", provides);
+    console.log("parentProvides", parentProvides);
+
+    if (provides === parentProvides) {
+      // 把provide原型指向父组件的provide
+      provides = currentInstance.provides = Object.create(parentProvides);
+    }
+
+    provides[key] = value;
+  }
+}
+
+// inject 函数的实现
+export function inject(key: string | any) {
+  const currentInstance = getCurrentInstance();
+  if (currentInstance) {
+    const parentProvide = currentInstance.parent.provides;
+
+    return parentProvide[key];
   }
 }
