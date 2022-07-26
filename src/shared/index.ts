@@ -38,3 +38,6 @@ export const capitalize = (str: string) => {
 export const toHandlerKey = (eventName: string) => {
   return eventName ? "on" + capitalize(eventName) : "";
 };
+
+// 空对象
+export const EMPTY_OBJECT = {};

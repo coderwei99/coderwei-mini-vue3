@@ -1,35 +1,37 @@
-import { isObject, isString } from "../shared/index";
+import { effect } from "../reactive/effect";
+import { EMPTY_OBJECT, isFunction, isObject, isString } from "../shared/index";
 import { createComponentInstance, setupComponent } from "./component";
 import { Fragment, Text } from "./vnode";
 
 export function render(vnode, container) {
   // TODO
-  patch(vnode, container, null);
+  patch(null, vnode, container, null);
+  // console.log(vnode);
 }
 
-function patch(vnode: any, container: any, parentComponent: any) {
-  // console.log(vnode);
-  if (!vnode) return;
+function patch(n1: any, n2: any, container: any, parentComponent: any) {
+  // console.log(n1, n2);
+  if (!n2) return;
   // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
-  if (vnode.type == Fragment) {
+  if (n2.type == Fragment) {
     // console.log(vnode, "vnode === far");
 
-    mountChildren(vnode.children, container, parentComponent);
+    mountChildren(n2.children, container, parentComponent);
   }
-  if (vnode.type == Text) {
-    processText(vnode, container);
+  if (n2.type == Text) {
+    processText(n2, container);
   }
 
-  if (typeof vnode.type == "string") {
+  if (typeof n2.type == "string") {
     // TODO 字符串 普通dom元素的情况
-    // console.log("type == string", vnode);
+    // console.log("type == string", n2);
 
-    processElement(vnode, container, parentComponent);
-  } else if (isObject(vnode.type)) {
+    processElement(n1, n2, container, parentComponent);
+  } else if (isObject(n2.type)) {
     // TODO 组件的情况
-    // console.log("type == Object", vnode);
+    // console.log("type == Object", n2);
 
-    mountComponent(vnode, container, parentComponent);
+    mountComponent(n2, container, parentComponent);
   }
 }
 
@@ -50,17 +52,35 @@ function processComponent(vnode: any, container: any, parentComponent: any) {
 }
 
 function setupRenderEffect(instance: any, vnode: any, container: any) {
-  // console.log("sub", instance.render);
+  // 通过effect进行包裹 会自动收集依赖 帮助我们在用户使用的变量发生变化时更新视图
+  effect(() => {
+    //如果isMouted是true 则证明是组件已经挂载过了 后续执行的是update操作 如果不区分更新和挂载 则造成依赖的数据一旦发生变化就创建一个新的节点
+    if (!instance.isMouted) {
+      // console.log("sub", instance.render);
+      // console.log("sub", instance.render());
+      // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
 
-  // console.log("sub", instance.render());
-  // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
-  const subTree = instance.render.call(instance.proxy);
+      const subTree = instance.render.call(instance.proxy);
+      instance.subTree = subTree;
+      // 对子树进行patch操作
+      patch(null, subTree, container, instance);
+      // console.log(subTree);
+      instance.isMouted = true; //将isMouted设置为true  代表已挂载 后续执行更新操作
 
-  // 对子树进行patch操作
-  patch(subTree, container, instance);
-  // console.log(subTree);
-
-  vnode.el = subTree.el;
+      vnode.el = subTree.el;
+    } else {
+      // TODO  update 逻辑
+      console.log("跟新视图");
+      // 这里处理更新的逻辑
+      // 新的vnode
+      const subTree = instance.render.call(instance.proxy);
+      // 老的vnode
+      const prevSubTree = instance.subTree;
+      // 存储这一次的vnode，下一次更新逻辑作为老的vnode
+      instance.subTree = subTree;
+      patch(prevSubTree, subTree, container, instance);
+    }
+  });
 }
 
 //判断字符串是否以on开头并且第三个字符为大写
@@ -68,21 +88,70 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
 export const isOn = (key: string) => /^on[A-Z]/.test(key);
 
 // 加工type是string的情况
-function processElement(vnode: any, container: any, parentComponent: any) {
-  mountElement(vnode, container, parentComponent);
+function processElement(
+  n1: any,
+  n2: any,
+  container: any,
+  parentComponent: any
+) {
+  //  判断是挂载还是更新
+  if (!n1) {
+    // 如果n1 就是旧节点 没有的情况下 就说明是挂载
+    mountElement(n2, container, parentComponent);
+  } else {
+    // 反之 patch 更新
+    patchElement(n1, n2, container);
+  }
 }
 
+// 处理元素是字符串情况下的更新逻辑
+function patchElement(n1: any, n2: any, container: any) {
+  // console.log("patch", n2);
+  const oldProps = n1.props || EMPTY_OBJECT;
+  const newProps = n2.props || EMPTY_OBJECT;
+  // console.log(el);
+  const el = (n2.el = n1.el);
+  patchProps(el, oldProps, newProps);
+}
+
+// 处理props的更新逻辑
+export function patchProps(el: any, oldProps: any, newProps: any) {
+  for (let key in newProps) {
+    const newProp = newProps[key];
+    const oldProp = oldProps[key];
+    if (newProp !== oldProp) {
+      patchProp(el, key, oldProp, newProp);
+    }
+  }
+  for (let key in oldProps) {
+    // 新的props没有该属性
+    if (!(key in newProps)) {
+      patchProp(el, key, oldProps[key], null);
+    }
+  }
+}
+export function patchProp(el, key, oldValue, newValue) {
+  if (Array.isArray(newValue)) {
+    el.setAttribute(key, newValue.join(" "));
+  } else if (isOn(key) && isFunction(newValue)) {
+    el.addEventListener(key.slice(2).toLowerCase(), newValue);
+  } else {
+    if (newValue === null || newValue === undefined) {
+      // 删除
+      el.removeAttribute(key);
+    } else {
+      el.setAttribute(key, newValue);
+    }
+  }
+}
 function mountElement(vnode: any, container: any, parentComponent: any) {
-  const el = document.createElement(vnode.type) as HTMLElement;
+  const el = (vnode.el = document.createElement(vnode.type) as HTMLElement);
 
   const { children, props } = vnode;
   // children 可能是数组 也可能是字符串需要分开处理
   if (isString(children)) {
     el.textContent = children;
   } else if (Array.isArray(children)) {
-    // 如果是数组 说明是一个嵌套dom元素
-    // console.log("Array.isArray成立", children);
-
     mountChildren(children, el, parentComponent);
   }
 
@@ -106,6 +175,7 @@ function mountElement(vnode: any, container: any, parentComponent: any) {
   }
   // 将创建的dom元素添加在父元素
   container.append(el);
+  // console.log("container", container.childNodes);
 }
 
 // 处理children是数组的情况
@@ -116,7 +186,7 @@ function mountChildren(children: any, container: any, parentComponent: any) {
   children.forEach(node => {
     // console.log("处理children是数组的情况", node);
 
-    patch(node, container, parentComponent);
+    patch(null, node, container, parentComponent);
   });
 }
 
