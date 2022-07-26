@@ -4,6 +4,7 @@ import { publicInstanceProxyHandlers } from "./commonsetupState";
 import { isObject, isFunction, isString } from "../shared/index";
 import { initProps } from "./componentProps";
 import { initSlots } from "./componentSlots";
+import { proxyRefs } from "../reactive/ref";
 
 // 保存组件实例  便于getCurrentInstance 中返回出去
 export let currentInstance = null;
@@ -88,7 +89,7 @@ function handleSetupResult(instance: any, setupResult: any) {
   if (isFunction(setupResult)) {
     // TODO setup返回值是h函数的情况
   } else if (isObject(setupResult)) {
-    instance.setupState = setupResult;
+    instance.setupState = proxyRefs(setupResult);
   }
 }
 

@@ -1,7 +1,7 @@
 import { isTracking, tarckEffect, triggerEffect } from "./effect";
 import { isReactive, reactive } from "./reactive";
 import { Dep } from "./effect";
-import { isObject } from "../shared";
+import { isObject } from "../shared/index";
 class RefImpl<T> {
   private _value: T;
   private _rawValue: T;
@@ -60,6 +60,8 @@ export function proxyRefs(value) {
     ? value
     : new Proxy(value, {
         get(target, key) {
+          // console.log("执行了", target, key);
+
           return unref(Reflect.get(target, key));
         },
         set(target, key, value) {
