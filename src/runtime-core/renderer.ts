@@ -1,5 +1,6 @@
 import { effect } from "../reactive/effect";
 import { EMPTY_OBJECT, isFunction, isObject, isString } from "../shared/index";
+import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 import { Fragment, Text } from "./vnode";
 
@@ -102,12 +103,12 @@ function processElement(
     mountElement(n2, container, parentComponent);
   } else {
     // 反之 patch 更新
-    patchElement(n1, n2, container);
+    patchElement(n1, n2, container, parentComponent);
   }
 }
 
 // 处理元素是字符串情况下的更新逻辑
-function patchElement(n1: any, n2: any, container: any) {
+function patchElement(n1: any, n2: any, container: any, parentComponent: any) {
   // console.log("patch", n2);
   const oldProps = n1.props || EMPTY_OBJECT;
   const newProps = n2.props || EMPTY_OBJECT;
@@ -115,8 +116,75 @@ function patchElement(n1: any, n2: any, container: any) {
   const el = (n2.el = n1.el);
   console.log(n1);
   console.log(n2);
+  console.log(el, "el");
 
   patchProps(el, oldProps, newProps);
+  patchChildren(n1, n2, el, parentComponent);
+}
+
+// 处理children更新逻辑
+export function patchChildren(
+  n1: any,
+  n2: any,
+  container: any,
+  parentComponent: any
+) {
+  /**
+   拿到新旧节点的shapeFlag  判断是变化的情况  一般分成四种情况
+   * 1. string === array
+   * 2. string === string
+   * 3. array ==== string
+   * 4. array ==== array
+   */
+  let prevShapeFlag = n1.shapeFlag;
+  let newShapeFlag = n2.shapeFlag;
+
+  // 拿到新旧节点的children
+  let prevChildren = n1.children;
+  let newChildren = n2.children;
+  if (newShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+    // 新节点是文本节点的情况
+    if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+      // 旧节点是数组的情况   走到这里说明是 array === string的更新
+      console.log("array === string");
+      // 1. 卸载节点
+      console.log(container.length, "container");
+
+      unmountChildren(container);
+      // 2. 设置children  children是一个string 直接设置即可
+      if (prevChildren !== newChildren) {
+        container.textContent = newChildren;
+      }
+    }
+  } else if (newShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+    // 新节点是数组的情况
+    if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      // 旧节点是文本节点  走到这里说明 string === array
+      console.log("string === array");
+      container.textContent = "";
+      // 处理array
+      mountChildren(newChildren, container, parentComponent);
+    }
+  }
+}
+
+// 卸载children
+function unmountChildren(children: any) {
+  console.log("children", children.length);
+
+  for (let i = 0; i < children.length; i++) {
+    remove(children[i].el);
+  }
+}
+
+// 移除节点函数
+export function remove(child: HTMLElement) {
+  const parent = child.parentNode;
+  console.log("parent", parent);
+
+  if (parent) {
+    parent.removeChild(child);
+  }
 }
 
 // 处理props的更新逻辑
