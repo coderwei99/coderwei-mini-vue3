@@ -71,7 +71,7 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
       vnode.el = subTree.el;
     } else {
       // TODO  update 逻辑
-      console.log("跟新视图");
+      // console.log("跟新视图");
       // 这里处理更新的逻辑
       // 新的vnode
       const subTree = instance.render.call(instance.proxy);
@@ -80,8 +80,8 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
       // 存储这一次的vnode，下一次更新逻辑作为老的vnode
       instance.subTree = subTree;
       patch(prevSubTree, subTree, container, instance);
-      console.log("prevSubTree", prevSubTree);
-      console.log("subTree", subTree);
+      // console.log("prevSubTree", prevSubTree);
+      // console.log("subTree", subTree);
     }
   });
 }
@@ -114,9 +114,9 @@ function patchElement(n1: any, n2: any, container: any, parentComponent: any) {
   const newProps = n2.props || EMPTY_OBJECT;
   // console.log(el);
   const el = (n2.el = n1.el);
-  console.log(n1);
-  console.log(n2);
-  console.log(el, "el");
+  // console.log(n1);
+  // console.log(n2);
+  // console.log(el, "el");
 
   patchProps(el, oldProps, newProps);
   patchChildren(n1, n2, el, parentComponent);
@@ -146,15 +146,15 @@ export function patchChildren(
     // 新节点是文本节点的情况
     if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       // 旧节点是数组的情况   走到这里说明是 array === string的更新
-      console.log("array === string");
+      // console.log("array === string");
       // 1. 卸载节点
-      console.log(container, "container");
+      // console.log(container, "container");
 
       unmountChildren(container);
     }
     // 2. 设置children  children是一个string 直接设置即可
-    console.log("prechildren", prevChildren);
-    console.log("newChildren", newChildren);
+    // console.log("prechildren", prevChildren);
+    // console.log("newChildren", newChildren);
     if (prevChildren !== newChildren) {
       container.textContent = newChildren;
     }
@@ -162,7 +162,7 @@ export function patchChildren(
     // 新节点是数组的情况
     if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
       // 旧节点是文本节点  走到这里说明 string === array
-      console.log("string === array");
+      // console.log("string === array");
       container.textContent = "";
       // 处理array
       mountChildren(newChildren, container, parentComponent);
@@ -172,7 +172,7 @@ export function patchChildren(
 
 // 卸载children
 function unmountChildren(children: any) {
-  console.log("children", children.length);
+  // console.log("children", children.length);
 
   for (let i = 0; i < children.length; i++) {
     remove(children[i].el);
@@ -182,7 +182,7 @@ function unmountChildren(children: any) {
 // 移除节点函数
 export function remove(child: HTMLElement) {
   const parent = child.parentNode;
-  console.log("parent", parent);
+  // console.log("parent", parent);
 
   if (parent) {
     parent.removeChild(child);
