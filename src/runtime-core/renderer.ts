@@ -79,6 +79,8 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
       // 存储这一次的vnode，下一次更新逻辑作为老的vnode
       instance.subTree = subTree;
       patch(prevSubTree, subTree, container, instance);
+      console.log("prevSubTree", prevSubTree);
+      console.log("subTree", subTree);
     }
   });
 }
@@ -111,6 +113,9 @@ function patchElement(n1: any, n2: any, container: any) {
   const newProps = n2.props || EMPTY_OBJECT;
   // console.log(el);
   const el = (n2.el = n1.el);
+  console.log(n1);
+  console.log(n2);
+
   patchProps(el, oldProps, newProps);
 }
 

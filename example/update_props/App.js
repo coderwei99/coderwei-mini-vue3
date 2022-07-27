@@ -9,7 +9,9 @@ export default {
     const click = () => {
       colors.value = '1'
       console.log(colors);
-      // count.value++
+      count.value++
+      console.log(count);
+
     }
     return {
       count,
