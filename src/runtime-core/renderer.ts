@@ -148,13 +148,15 @@ export function patchChildren(
       // 旧节点是数组的情况   走到这里说明是 array === string的更新
       console.log("array === string");
       // 1. 卸载节点
-      console.log(container.length, "container");
+      console.log(container, "container");
 
       unmountChildren(container);
-      // 2. 设置children  children是一个string 直接设置即可
-      if (prevChildren !== newChildren) {
-        container.textContent = newChildren;
-      }
+    }
+    // 2. 设置children  children是一个string 直接设置即可
+    console.log("prechildren", prevChildren);
+    console.log("newChildren", newChildren);
+    if (prevChildren !== newChildren) {
+      container.textContent = newChildren;
     }
   } else if (newShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
     // 新节点是数组的情况
