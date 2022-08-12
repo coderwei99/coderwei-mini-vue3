@@ -19,7 +19,7 @@ export function getCurrentInstance(): any {
   return currentInstance;
 }
 
-// 创建组件实例 本质上就是个对象 vnode+type
+// 创建组件实例 本质上就是个对象
 export function createComponentInstance(vnode: any, parentComponent: any) {
   const type = vnode.type;
   const instance = {
