@@ -39,5 +39,9 @@ export const toHandlerKey = (eventName: string) => {
   return eventName ? "on" + capitalize(eventName) : "";
 };
 
+//判断字符串是否以on开头并且第三个字符为大写
+// example: onClick ==> true、 onclick ==> false
+export const isOn = (key: string) => /^on[A-Z]/.test(key);
+
 // 空对象
 export const EMPTY_OBJECT = {};

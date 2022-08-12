@@ -1,2 +1,3 @@
-export * from "./reactive";
-export * from "./runtime-core";
+export * from "./reactive/index";
+export * from "./runtime-core/index";
+export * from "./runtime-dom/index";

@@ -7,7 +7,7 @@ export default {
     let colors = ref('red')
     const count = ref(0)
     const click = () => {
-      colors.value = '1'
+      colors.value = 1
       console.log(colors);
       count.value++
       console.log(count);

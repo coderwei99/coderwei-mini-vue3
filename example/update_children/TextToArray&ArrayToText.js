@@ -4,7 +4,7 @@ import { h, ref } from '../../lib/vue3.esm.js'
 export default {
   name: 'app',
   setup() {
-    const isChange = ref(false)
+    const isChange = ref(true)
     window.isChange = isChange
     return {
       isChange
