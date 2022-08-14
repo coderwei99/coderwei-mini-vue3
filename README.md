@@ -45,12 +45,12 @@ runtime-core部分
 - [x] 实现组件 emit 功能   （获取组件的props并判断props的'on+事件名'是否是emit的第一个参数：事件名匹配，是的话就执行props的里面的事件）
 - [x] 实现组件 slots 功能 (具名插槽&作用域插槽)
 - [x] 实现 Fragment 和 Text 类型节点  (避免固定死外层嵌套某个元素 比如说div，使用Fragment/Text标识符 直接不渲染外层的div，直接走mountChildren函数  处理children 外层用户需要什么节点进行包裹自行选择)
-- [ ] 实现 getCurrentInstance
-- [ ] 实现 provide-inject 功能
+- [x] 实现 getCurrentInstance
+- [x] 实现 provide-inject 功能
 - [ ] 实现自定义渲染器 custom renderer
-- [ ] 更新 element 流程搭建
-- [ ] 更新 element 的 props
-- [ ] 更新 element 的 children
+- [x] 更新 element 流程搭建
+- [x] 更新 element 的 props
+- [x] 更新 element 的 children
 - [ ] 更新 element 的双端对比 diff 算法
 - [ ] 实现组件更新功能
 
