@@ -13,6 +13,8 @@ export function createRenderer(options?) {
     createElement: hotCreateElement,
     patchProp: hotPatchProp,
     insert: hotInsert,
+    remove: hotRemove,
+    setText: hotSetText,
   } = options;
 
   function render(vnode, container) {
@@ -82,8 +84,8 @@ export function createRenderer(options?) {
     const newProps = n2.props || EMPTY_OBJECT;
     // console.log(el);
     const el = (n2.el = n1.el);
-    // console.log(n1);
-    // console.log(n2);
+    console.log("n1", n1);
+    console.log("n2", n2);
     // console.log(el, "el");
     patchChildren(n1, n2, el, parentComponent);
     patchProps(el, oldProps, newProps);
@@ -131,21 +133,22 @@ export function createRenderer(options?) {
         // console.log("array === string");
         // 1. 卸载节点
         // console.log(container, "container");
-
         unmountChildren(container);
       }
-      // 2. 设置children  children是一个string 直接设置即可
+      // 2. 设置children  children是一个string 直接设置即可 挂载节点  注意新节点是文本节点 所以需要使用的的是setText函数
+      // 这里兼容了array ==> string 和 string ==> string的情况  如果旧节点是array 会走上面的if条件 对旧节点进行卸载
       // console.log("prechildren", prevChildren);
       // console.log("newChildren", newChildren);
       if (prevChildren !== newChildren) {
-        container.textContent = newChildren;
+        hotSetText(container, newChildren);
       }
     } else if (newShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       // 新节点是数组的情况
       if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
         // 旧节点是文本节点  走到这里说明 string === array
         // console.log("string === array");
-        container.textContent = "";
+        hotSetText(container, "");
+
         // 处理array
         mountChildren(newChildren, container, parentComponent);
       }
@@ -182,21 +185,7 @@ export function createRenderer(options?) {
 
     // 处理props
     for (const key of Object.getOwnPropertyNames(props)) {
-      if (Array.isArray(props[key])) {
-        // 数组的情况 比如说class 用户可能给多个class  所以说以空格进行分隔
-        /**
-         * example
-         * h('div',{class:['name','activeName']},'hello vue')
-         * 真实dom: <div class = 'name activeName'>hello vue</div>
-         */
-        el.setAttribute(key, props[key].join(" "));
-      } else if (isOn(key)) {
-        // 走到这里说明是事件 需要给dom元素添加对应的事件
-        el.addEventListener(key.slice(2).toLocaleLowerCase(), props[key]);
-      } else {
-        // 单纯的字符串 直接添加属性即可
-        el.setAttribute(key, props[key]);
-      }
+      hotPatchProp(el, key, null, props[key]);
     }
     // 将创建的dom元素添加在父元素
     hotInsert(el, container);
@@ -210,7 +199,6 @@ export function createRenderer(options?) {
 
     children.forEach(node => {
       // console.log("处理children是数组的情况", node);
-
       patch(null, node, container, parentComponent);
     });
   }
@@ -269,19 +257,18 @@ export function createRenderer(options?) {
     });
   }
 
+  // 卸载children
+  function unmountChildren(children: any) {
+    // console.log("children", children.length);
+
+    for (let i = 0; i < children.length; i++) {
+      hotRemove(children[i].el);
+    }
+  }
   return {
     render,
     createApp: createAppAPI(render),
   };
-}
-
-// 卸载children
-function unmountChildren(children: any) {
-  // console.log("children", children.length);
-
-  for (let i = 0; i < children.length; i++) {
-    remove(children[i].el);
-  }
 }
 
 // 移除节点函数

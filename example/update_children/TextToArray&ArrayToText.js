@@ -12,7 +12,8 @@ export default {
   },
   render() {
     return this.isChange ? h('div', {}, "string") : h('div', {}, [
-      h('div', {}, 'array')
+      h('div', {}, 'array1'),
+      h('div', {}, 'array1'),
     ])
   },
 }

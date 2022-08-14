@@ -51,7 +51,7 @@ function patchProp(el, key, preValue, nextValue) {
       }
     }
   } else {
-    if (nextValue === null || nextValue === "") {
+    if (nextValue === null || nextValue === undefined) {
       el.removeAttribute(key);
     } else {
       el.setAttribute(key, nextValue);
@@ -93,4 +93,4 @@ export const createApp = (...args) => {
   return ensureRenderer().createApp(...args);
 };
 
-export * from "./index";
+export * from "../runtime-core";
