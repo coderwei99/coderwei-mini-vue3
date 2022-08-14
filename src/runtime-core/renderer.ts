@@ -1,11 +1,5 @@
 import { effect } from "../reactive/effect";
-import {
-  EMPTY_OBJECT,
-  isFunction,
-  isObject,
-  isOn,
-  isString,
-} from "../shared/index";
+import { EMPTY_OBJECT, isFunction, isObject, isOn, isString } from "../shared";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 import { createAppAPI } from "./createApp";
@@ -13,6 +7,14 @@ import { Fragment, Text } from "./vnode";
 
 export function createRenderer(options?) {
   // 从options获取自定义的渲染器
+  console.log(options, "options");
+
+  const {
+    createElement: hotCreateElement,
+    patchProp: hotPatchProp,
+    insert: hotInsert,
+  } = options;
+
   function render(vnode, container) {
     // TODO
     patch(null, vnode, container, null);
@@ -87,20 +89,20 @@ export function createRenderer(options?) {
     patchProps(el, oldProps, newProps);
   }
 
-  function patchProp(el, key, oldValue, newValue) {
-    if (Array.isArray(newValue)) {
-      el.setAttribute(key, newValue.join(" "));
-    } else if (isOn(key) && isFunction(newValue)) {
-      el.addEventListener(key.slice(2).toLowerCase(), newValue);
-    } else {
-      if (newValue === null || newValue === undefined) {
-        // 删除
-        el.removeAttribute(key);
-      } else {
-        el.setAttribute(key, newValue);
-      }
-    }
-  }
+  // function patchProp(el, key, oldValue, newValue) {
+  //   if (Array.isArray(newValue)) {
+  //     el.setAttribute(key, newValue.join(" "));
+  //   } else if (isOn(key) && isFunction(newValue)) {
+  //     el.addEventListener(key.slice(2).toLowerCase(), newValue);
+  //   } else {
+  //     if (newValue === null || newValue === undefined) {
+  //       // 删除
+  //       el.removeAttribute(key);
+  //     } else {
+  //       el.setAttribute(key, newValue);
+  //     }
+  //   }
+  // }
 
   // 处理children更新逻辑
   function patchChildren(
@@ -156,19 +158,19 @@ export function createRenderer(options?) {
       const newProp = newProps[key];
       const oldProp = oldProps[key];
       if (newProp !== oldProp) {
-        patchProp(el, key, oldProp, newProp);
+        hotPatchProp(el, key, oldProp, newProp);
       }
     }
     for (let key in oldProps) {
       // 新的props没有该属性
       if (!(key in newProps)) {
-        patchProp(el, key, oldProps[key], null);
+        hotPatchProp(el, key, oldProps[key], null);
       }
     }
   }
 
   function mountElement(vnode: any, container: any, parentComponent: any) {
-    const el = (vnode.el = document.createElement(vnode.type) as HTMLElement);
+    const el = (vnode.el = hotCreateElement(vnode.type) as HTMLElement);
 
     const { children, props } = vnode;
     // children 可能是数组 也可能是字符串需要分开处理
@@ -197,7 +199,7 @@ export function createRenderer(options?) {
       }
     }
     // 将创建的dom元素添加在父元素
-    container.append(el);
+    hotInsert(el, container);
     // console.log("container", container.childNodes);
   }
 

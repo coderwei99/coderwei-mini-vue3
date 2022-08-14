@@ -3,7 +3,7 @@ import { isOn } from "../shared/index";
 import { createRenderer } from "../runtime-core/renderer";
 
 function createElement(type) {
-  console.log("CreateElement", type);
+  console.log("create el 操作", type);
   const element = document.createElement(type);
   return element;
 }
@@ -60,7 +60,7 @@ function patchProp(el, key, preValue, nextValue) {
 }
 
 function insert(child, parent, anchor = null) {
-  console.log("Insert");
+  console.log("Insert操作");
   parent.insertBefore(child, anchor);
 }
 
