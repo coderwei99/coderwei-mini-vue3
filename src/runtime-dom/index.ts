@@ -12,7 +12,9 @@ function createText(text) {
   return document.createTextNode(text);
 }
 
-function setText(node, text) {
+function setText(node: HTMLElement, text) {
+  console.log("调用到这里了", node, text);
+
   node.nodeValue = text;
 }
 

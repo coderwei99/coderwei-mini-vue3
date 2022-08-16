@@ -8,7 +8,7 @@ export default {
     let _foo = ref('_foo')
     const count = ref(0)
     const click = () => {
-      colors.value = 1
+      // colors.value = "change"
       count.value++
     }
     const removeClass = () => {

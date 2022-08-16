@@ -15,6 +15,7 @@ export function createRenderer(options?) {
     insert: hotInsert,
     remove: hotRemove,
     setText: hotSetText,
+    setElementText: hotSetElementText,
   } = options;
 
   function render(vnode, container) {
@@ -79,13 +80,13 @@ export function createRenderer(options?) {
     container: any,
     parentComponent: any
   ) {
-    // console.log("patch", n2);
+    // console.log("patchElement", n2);
     const oldProps = n1.props || EMPTY_OBJECT;
     const newProps = n2.props || EMPTY_OBJECT;
     // console.log(el);
     const el = (n2.el = n1.el);
-    console.log("n1", n1);
-    console.log("n2", n2);
+    // console.log("n1", n1);
+    // console.log("n2", n2);
     // console.log(el, "el");
     patchChildren(n1, n2, el, parentComponent);
     patchProps(el, oldProps, newProps);
@@ -139,20 +140,61 @@ export function createRenderer(options?) {
       // 这里兼容了array ==> string 和 string ==> string的情况  如果旧节点是array 会走上面的if条件 对旧节点进行卸载
       // console.log("prechildren", prevChildren);
       // console.log("newChildren", newChildren);
+      console.log("prevChildren", prevChildren);
+      console.log("newChildren", newChildren);
+
       if (prevChildren !== newChildren) {
-        hotSetText(container, newChildren);
+        hotSetElementText(container, newChildren);
       }
     } else if (newShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       // 新节点是数组的情况
       if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
         // 旧节点是文本节点  走到这里说明 string === array
         // console.log("string === array");
-        hotSetText(container, "");
+        hotSetElementText(container, "");
 
         // 处理array
         mountChildren(newChildren, container, parentComponent);
+      } else {
+        // array to array diff算法
+        console.log("array to array diff");
+        patchKeyedChildren(
+          prevChildren,
+          newChildren,
+          container,
+          parentComponent
+        );
       }
     }
+  }
+
+  function patchKeyedChildren(
+    c1: any,
+    c2: any,
+    container: any,
+    parentComponent: any
+  ) {
+    let i = 0;
+    let e1 = c1.length - 1;
+    let e2 = c2.length - 1;
+
+    function isSomeVNodeType(n1, n2) {
+      return n1.type == n2.type && n1.key == n2.key;
+    }
+
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[i];
+      const n2 = c2[i];
+
+      if (isSomeVNodeType(n1, n2)) {
+        // 如果为true  就说明 key和 val一致  则直接patch更新
+        patch(n1, n2, container, parentComponent);
+      } else {
+        break;
+      }
+      i++;
+    }
+    console.log(i);
   }
 
   // 处理props的更新逻辑
