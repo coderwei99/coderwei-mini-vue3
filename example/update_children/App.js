@@ -13,8 +13,8 @@ export default {
     return h('div', {}, [
       h("div", {}, '主页'),
       // h(TextToText)
-      h(TextToArray)
-      // h(ArrayToArray)
+      // h(TextToArray)
+      h(ArrayToArray)
     ])
   },
 }

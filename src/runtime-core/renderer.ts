@@ -177,11 +177,14 @@ export function createRenderer(options?) {
     let i = 0;
     let e1 = c1.length - 1;
     let e2 = c2.length - 1;
+    // console.log(e1);
+    // console.log(e2);
+    // console.log("-----");
 
     function isSomeVNodeType(n1, n2) {
       return n1.type == n2.type && n1.key == n2.key;
     }
-
+    // 左端算法  从左边开始找 一直找到两个节点不同为止  相同的就继续递归调用patch 检查children是否相同
     while (i <= e1 && i <= e2) {
       const n1 = c1[i];
       const n2 = c2[i];
@@ -194,7 +197,42 @@ export function createRenderer(options?) {
       }
       i++;
     }
+
+    // 右端算法
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[e1];
+      const n2 = c2[e2];
+      if (isSomeVNodeType(n1, n2)) {
+        patch(n1, n2, container, parentComponent);
+      } else {
+        break;
+      }
+      e1--;
+      e2--;
+    }
+
+    // 新的比旧的长  n1:旧节点  n2:新节点
     console.log(i);
+    console.log(e1);
+    console.log(e2);
+
+    /**
+     * 旧节点: A  B
+     * 新节点: A  B  C
+     * 因为这里是考虑新的比旧的长  所以需要将多余的节点进行挂载操作 而多余的节点就是从当下标i在旧节点中是null的时候 就代表旧节点遍历完了 从新节点的这个位置开始后面的全都是多的节点 进行挂载
+     */
+    if (i > e1) {
+      if (i <= e2) {
+        console.log("新旧节点");
+        patch(null, c2[e2], container, parentComponent);
+      } else {
+        if (i <= e2) {
+          const nextPros = i + 1;
+          const anchor = i + 1 > e2 ? null : c2[nextPros].el;
+          patch(null, c2[i], container, parentComponent, anchor);
+        }
+      }
+    }
   }
 
   // 处理props的更新逻辑
