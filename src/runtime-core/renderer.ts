@@ -25,7 +25,15 @@ export function createRenderer(options?) {
   }
 
   // patch方法 第一次用来处理挂载 第二次用来处理更新  由n1进行判断
-  function patch(n1: any, n2: any, container: any, parentComponent: any) {
+  function patch(
+    n1: any,
+    n2: any,
+    container: any,
+    parentComponent: any,
+    anchor: any = null
+  ) {
+    console.log("patch", anchor);
+
     // console.log(n1, n2);
     if (!n2) return;
     // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
@@ -42,7 +50,7 @@ export function createRenderer(options?) {
       // TODO 字符串 普通dom元素的情况
       // console.log("type == string", n2);
 
-      processElement(n1, n2, container, parentComponent);
+      processElement(n1, n2, container, parentComponent, anchor);
     } else if (isObject(n2.type)) {
       // TODO 组件的情况
       // console.log("type == Object", n2);
@@ -61,12 +69,13 @@ export function createRenderer(options?) {
     n1: any,
     n2: any,
     container: any,
-    parentComponent: any
+    parentComponent: any,
+    anchor: any
   ) {
     //  判断是挂载还是更新
     if (!n1) {
       // 如果n1 就是旧节点 没有的情况下 就说明是挂载
-      mountElement(n2, container, parentComponent);
+      mountElement(n2, container, parentComponent, anchor);
     } else {
       // 反之 patch 更新
       patchElement(n1, n2, container, parentComponent);
@@ -224,13 +233,11 @@ export function createRenderer(options?) {
     if (i > e1) {
       if (i <= e2) {
         console.log("新旧节点");
-        patch(null, c2[e2], container, parentComponent);
-      } else {
-        if (i <= e2) {
-          const nextPros = i + 1;
-          const anchor = i + 1 > e2 ? null : c2[nextPros].el;
-          patch(null, c2[i], container, parentComponent, anchor);
-        }
+        const nextPros = i + 1;
+        const anchor = i + 1 > c2.length ? null : c2[nextPros].el;
+        console.log("-----", anchor);
+
+        patch(null, c2[i], container, parentComponent, anchor);
       }
     }
   }
@@ -252,13 +259,19 @@ export function createRenderer(options?) {
     }
   }
 
-  function mountElement(vnode: any, container: any, parentComponent: any) {
+  function mountElement(
+    vnode: any,
+    container: any,
+    parentComponent: any,
+    anchor: any
+  ) {
     const el = (vnode.el = hotCreateElement(vnode.type) as HTMLElement);
 
     const { children, props } = vnode;
     // children 可能是数组 也可能是字符串需要分开处理
     if (isString(children)) {
-      el.textContent = children;
+      // el.textContent = children;
+      hotSetElementText(el, children);
     } else if (Array.isArray(children)) {
       mountChildren(children, el, parentComponent);
     }
@@ -268,7 +281,7 @@ export function createRenderer(options?) {
       hotPatchProp(el, key, null, props[key]);
     }
     // 将创建的dom元素添加在父元素
-    hotInsert(el, container);
+    hotInsert(el, container, anchor);
     // console.log("container", container.childNodes);
   }
 

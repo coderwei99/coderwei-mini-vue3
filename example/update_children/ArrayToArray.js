@@ -48,7 +48,10 @@ import { h, ref } from '../../lib/vue3.esm.js'
 // (a b)
 // c (a b)
 // i = 0, e1 = -1, e2 = 0
-const prevChildren = [h("p", { key: "A" }, "A"), h("p", { key: "B" }, "B")];
+const prevChildren = [
+  h("p", { key: "A" }, "A"),
+  h("p", { key: "B" }, "B")
+];
 const nextChildren = [
   h("p", { key: "C" }, "C"),
   h("p", { key: "A" }, "A"),
