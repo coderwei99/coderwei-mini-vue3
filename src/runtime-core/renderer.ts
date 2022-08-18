@@ -255,6 +255,8 @@ export function createRenderer(options?) {
       console.log("diff算法中间部分");
       let s1 = i;
       let s2 = i;
+      let toBePatched = e2 - s2 + 1;
+      let patched = 0;
 
       // 组织印射表
       /**
@@ -277,6 +279,18 @@ export function createRenderer(options?) {
       for (let i = s2; i <= e1; i++) {
         let newIndex;
         const prevChildren = c1[i];
+
+        // 优化点: 当新节点的中间部分比旧节点的中间部分长的时候 后续就直接执行remove操作即可 就不需要下面繁琐的比较了
+        /**
+         * 旧: a,b,(c,e,d),f,g
+         * 新: a,b,(e,c),f,g
+         *
+         * 当指针走到旧节点的e的时候  新节点中间的两个节点已经全都在旧节点中出现过并且patch过了 那么后面的d百分之百是做删除操作的 也就是不会存在于新节点
+         */
+        if (patched >= toBePatched) {
+          hotRemove(prevChildren.el);
+        }
+
         // 这里包含两种情况  null == null || null == undefined
         if (prevChildren.key != null) {
           // 如果旧节点有key的话 就去新节点的印射表中找
@@ -298,6 +312,7 @@ export function createRenderer(options?) {
         } else {
           // 找到的话  走patch操作 递归比较children
           patch(prevChildren, c2[newIndex], container, parentComponent);
+          patched++;
         }
       }
     }
