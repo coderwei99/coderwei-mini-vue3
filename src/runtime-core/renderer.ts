@@ -32,8 +32,6 @@ export function createRenderer(options?) {
     parentComponent: any,
     anchor: any = null
   ) {
-    console.log("patch", anchor);
-
     // console.log(n1, n2);
     if (!n2) return;
     // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
@@ -233,11 +231,18 @@ export function createRenderer(options?) {
     if (i > e1) {
       if (i <= e2) {
         console.log("新旧节点");
-        const nextPros = i + 1;
-        const anchor = i + 1 > c2.length ? null : c2[nextPros].el;
-        console.log("-----", anchor);
+        const nextPros = e2 + 1;
+        const anchor = e2 + 1 < c2.length ? c2[nextPros].el : null;
+        console.log("i+1", i + 1);
+        console.log("c2.length", c2);
+        console.log("c2.length", { ...c2[nextPros] });
+        console.log("c2.length", c2[nextPros]);
 
-        patch(null, c2[i], container, parentComponent, anchor);
+        console.log("-----", anchor);
+        while (i <= e2) {
+          patch(null, c2[i], container, parentComponent, anchor);
+          i++;
+        }
       }
     }
   }
