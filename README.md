@@ -51,10 +51,11 @@ runtime-core部分
 - [x] 更新 element 流程搭建
 - [x] 更新 element 的 props
 - [x] 更新 element 的 children
-- [ ] 更新 element 的双端对比 diff 算法
-- [ ] 实现组件更新功能
+- [x] 更新 element 的双端对比 diff 算法
+- [x] 实现组件更新功能
+- [ ] nextTick 的实现
 
 
 ## 遗留bug
 > 先走完整个流程，这里记录调试过程中发现的小bug，走完整个流程在处理这些bug，顺便迫使自己重新梳理整个流程
-1. 目前处理子组件children的逻辑有问题，当子组件的children为字符串的时候，渲染会出错
+- [x]目前处理子组件children的逻辑有问题，当子组件的children为字符串的时候，渲染会出错
