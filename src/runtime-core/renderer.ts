@@ -35,27 +35,25 @@ export function createRenderer(options?) {
     anchor: any = null
   ) {
     // console.log(n1, n2);
-    if (!n2) return;
     // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
-    if (n2.type == Fragment) {
-      // console.log(vnode, "vnode === far");
-
-      mountChildren(n2.children, container, parentComponent);
-    }
-    if (n2.type == Text) {
-      processText(n2, container);
-    }
-
-    if (typeof n2.type == "string") {
-      // TODO 字符串 普通dom元素的情况
-      // console.log("type == string", n2);
-
-      processElement(n1, n2, container, parentComponent, anchor);
-    } else if (isObject(n2.type)) {
-      // TODO 组件的情况
-      // console.log("type == Object", n2);
-
-      mountComponent(n1, n2, container, parentComponent);
+    const { shapeFlag, type } = n2;
+    switch (type) {
+      case Text:
+        processText(n2, container);
+        break;
+      case Fragment:
+        mountChildren(n2.children, container, parentComponent);
+        break;
+      default:
+        if (shapeFlag & ShapeFlags.ELEMENT) {
+          // TODO 字符串 普通dom元素的情况
+          // console.log("type == string", n2);
+          processElement(n1, n2, container, parentComponent, anchor);
+        } else if (n2.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+          // TODO 组件的情况
+          // console.log("type == Object", n2);
+          processComponent(n1, n2, container, parentComponent);
+        }
     }
   }
 
@@ -397,7 +395,7 @@ export function createRenderer(options?) {
     });
   }
 
-  function processComponent(vnode: any, container: any, parentComponent: any) {
+  function mountComponent(vnode: any, container: any, parentComponent: any) {
     // 创建组件实例
     const instance = (vnode.component = createComponentInstance(
       vnode,
@@ -412,7 +410,7 @@ export function createRenderer(options?) {
     setupRenderEffect(instance, vnode, container);
   }
 
-  function mountComponent(
+  function processComponent(
     n1: any,
     n2: any,
     container: any,
@@ -422,7 +420,7 @@ export function createRenderer(options?) {
       // 如果n1有值说明是更新  如果n1 没有值说明是挂载操作
       updateComponent(n1, n2);
     } else {
-      processComponent(n2, container, parentComponent);
+      mountComponent(n2, container, parentComponent);
     }
   }
 
