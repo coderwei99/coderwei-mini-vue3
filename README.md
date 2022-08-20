@@ -53,7 +53,7 @@ runtime-core部分
 - [x] 更新 element 的 children
 - [x] 更新 element 的双端对比 diff 算法
 - [x] 实现组件更新功能
-- [ ] nextTick 的实现
+- [x] nextTick 的实现 (vue3视图更新是异步的，如果我们想在组件更新的时候拿到当前组件的实例或者是操作当前组件的某些数据、dom，正常情况下是拿不到的，因为我们写在script标签内的代码都是同步的，那个时候视图还没有更新，拿到的自然都是旧数据)
 
 
 ## 遗留bug
