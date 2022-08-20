@@ -53,7 +53,7 @@ export function createRenderer(options?) {
       // TODO 组件的情况
       // console.log("type == Object", n2);
 
-      mountComponent(n2, container, parentComponent);
+      mountComponent(n1, n2, container, parentComponent);
     }
   }
 
@@ -299,7 +299,7 @@ export function createRenderer(options?) {
           newIndex = keyToIndexMap.get(prevChildren.key);
         } else {
           // 说明用户的旧节点没有key  这个时候就只能for循环挨个遍历了
-          for (let j = s2; j < e2; j++) {
+          for (let j = s2; j <= e2; j++) {
             if (isSomeVNodeType(e2[j], prevChildren)) {
               // 如果新节点和旧节点的type 和key 相同  就说明找到了 然后这一层循环就没必要了
               newIndex = j;
@@ -397,7 +397,10 @@ export function createRenderer(options?) {
 
   function processComponent(vnode: any, container: any, parentComponent: any) {
     // 创建组件实例
-    const instance = createComponentInstance(vnode, parentComponent);
+    const instance = (vnode.component = createComponentInstance(
+      vnode,
+      parentComponent
+    ));
     // console.log(instance);
 
     // 安装组件
@@ -407,14 +410,36 @@ export function createRenderer(options?) {
     setupRenderEffect(instance, vnode, container);
   }
 
-  function mountComponent(vnode: any, container: any, parentComponent: any) {
-    processComponent(vnode, container, parentComponent);
+  function mountComponent(
+    n1: any,
+    n2: any,
+    container: any,
+    parentComponent: any
+  ) {
+    if (n1) {
+      // 如果n1有值说明是更新  如果n1 没有值说明是挂载操作
+      updateComponent(n1, n2, container, parentComponent);
+    } else {
+      processComponent(n2, container, parentComponent);
+    }
   }
 
-  function setupRenderEffect(instance: any, vnode: any, container: any) {
+  function updateComponent(
+    n1: any,
+    n2: any,
+    container: any,
+    parentComponent: any
+  ) {
+    console.log("更新操作");
+    const instance = (n2.component = n1.component);
+    instance.next = n2;
+    instance.update();
+  }
+
+  function setupRenderEffect(instance: any, initialvnode: any, container: any) {
     // 通过effect进行包裹 会自动收集依赖 帮助我们在用户使用的变量发生变化时更新视图
-    effect(() => {
-      //如果isMouted是true 则证明是组件已经挂载过了 后续执行的是update操作 如果不区分更新和挂载 则造成依赖的数据一旦发生变化就创建一个新的节点
+    instance.update = effect(() => {
+      // 如果isMouted是true 则证明是组件已经挂载过了 后续执行的是update操作 如果不区分更新和挂载 则造成依赖的数据一旦发生变化就创建一个新的节点
       // console.log(instance.isMouted, "instance");
 
       if (!instance.isMouted) {
@@ -429,11 +454,20 @@ export function createRenderer(options?) {
         // console.log(subTree);
         instance.isMouted = true; //将isMouted设置为true  代表已挂载 后续执行更新操作
 
-        vnode.el = subTree.el;
+        initialvnode.el = subTree.el;
       } else {
         // TODO  update 逻辑
-        // console.log("跟新视图");
+        console.log("更新视图");
         // 这里处理更新的逻辑
+
+        // 处理组件
+        const { next, vnode } = instance;
+        console.log(vnode, "---");
+        console.log(next, "next---");
+        if (next) {
+          next.el = vnode.el;
+          updateComponentPreRender(instance, next);
+        }
         // 新的vnode
         const subTree = instance.render.call(instance.proxy);
         // 老的vnode
@@ -461,6 +495,15 @@ export function createRenderer(options?) {
     render,
     createApp: createAppAPI(render),
   };
+}
+
+// 更新组件
+function updateComponentPreRender(instance: any, nextVnode: any) {
+  console.log(instance, "instance");
+  console.log(nextVnode, "nextVnode");
+  instance.vnode = nextVnode;
+  instance.next = null;
+  instance.props = nextVnode.props;
 }
 
 // 移除节点函数

@@ -4,12 +4,16 @@ export type PublicPropertiesMap = Record<string, (instance: any) => any>;
 
 const publicPropertiesMap: PublicPropertiesMap = {
   $slots: instance => instance.slots,
+  $props: instance => instance.props,
 };
 
 export const publicInstanceProxyHandlers: ProxyHandler<any> = {
   get({ _: instance }, key: string) {
     const { setupState, props } = instance;
-    // console.log("key", key);
+    console.log(instance);
+
+    console.log("key", key);
+    console.log("setupState", setupState);
 
     if (hasOwn(setupState, key)) {
       return setupState[key];

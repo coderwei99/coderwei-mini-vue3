@@ -34,6 +34,8 @@ export function createComponentInstance(vnode: any, parentComponent: any) {
     parent: parentComponent, //父组件实例
     isMouted: false, //标志组件是否挂载  后续用于判断是更新还是挂载
     subTree: {},
+    setupState: {},
+    next: null,
   };
   // console.log("vnode", instance);
   // console.log("emit", emit);
