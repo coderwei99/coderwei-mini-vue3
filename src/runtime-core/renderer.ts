@@ -4,6 +4,7 @@ import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 import { shouldUpdateComponent } from "./componentUpdateUtils";
 import { createAppAPI } from "./createApp";
+import { queueJobs } from "./scheduler";
 import { Fragment, Text } from "./vnode";
 
 export function createRenderer(options?) {
@@ -444,49 +445,57 @@ export function createRenderer(options?) {
 
   function setupRenderEffect(instance: any, initialvnode: any, container: any) {
     // 通过effect进行包裹 会自动收集依赖 帮助我们在用户使用的变量发生变化时更新视图
-    instance.update = effect(() => {
-      // 如果isMouted是true 则证明是组件已经挂载过了 后续执行的是update操作 如果不区分更新和挂载 则造成依赖的数据一旦发生变化就创建一个新的节点
-      // console.log(instance.isMouted, "instance");
+    instance.update = effect(
+      () => {
+        // 如果isMouted是true 则证明是组件已经挂载过了 后续执行的是update操作 如果不区分更新和挂载 则造成依赖的数据一旦发生变化就创建一个新的节点
+        // console.log(instance.isMouted, "instance");
 
-      if (!instance.isMouted) {
-        // console.log("sub", instance.render);
-        // console.log("sub", instance.render());
-        // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
+        if (!instance.isMouted) {
+          // console.log("sub", instance.render);
+          // console.log("sub", instance.render());
+          // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
 
-        const subTree = instance.render.call(instance.proxy);
-        instance.subTree = subTree;
-        // 对子树进行patch操作
-        patch(null, subTree, container, instance);
-        // console.log(subTree);
-        instance.isMouted = true; //将isMouted设置为true  代表已挂载 后续执行更新操作
+          const subTree = instance.render.call(instance.proxy);
+          instance.subTree = subTree;
+          // 对子树进行patch操作
+          patch(null, subTree, container, instance);
+          // console.log(subTree);
+          instance.isMouted = true; //将isMouted设置为true  代表已挂载 后续执行更新操作
 
-        initialvnode.el = subTree.el;
-      } else {
-        // TODO  update 逻辑
-        console.log("更新视图");
-        // 这里处理更新的逻辑
+          initialvnode.el = subTree.el;
+        } else {
+          // TODO  update 逻辑
+          console.log("更新视图");
+          // 这里处理更新的逻辑
 
-        // 处理组件
-        const { next, vnode } = instance;
-        console.log(vnode, "---");
-        console.log(next, "next---");
-        if (next) {
-          next.el = vnode.el;
-          updateComponentPreRender(instance, next);
+          // 处理组件
+          const { next, vnode } = instance;
+          console.log(vnode, "---");
+          console.log(next, "next---");
+          if (next) {
+            next.el = vnode.el;
+            updateComponentPreRender(instance, next);
+          }
+          // 新的vnode
+          const subTree = instance.render.call(instance.proxy);
+          // 老的vnode
+          const prevSubTree = instance.subTree;
+          // 存储这一次的vnode，下一次更新逻辑作为老的vnode
+          instance.subTree = subTree;
+          // console.log("跟着视图走patch");
+
+          patch(prevSubTree, subTree, container, instance);
+          // console.log("prevSubTree", prevSubTree);
+          // console.log("subTree", subTree);
         }
-        // 新的vnode
-        const subTree = instance.render.call(instance.proxy);
-        // 老的vnode
-        const prevSubTree = instance.subTree;
-        // 存储这一次的vnode，下一次更新逻辑作为老的vnode
-        instance.subTree = subTree;
-        // console.log("跟着视图走patch");
-
-        patch(prevSubTree, subTree, container, instance);
-        // console.log("prevSubTree", prevSubTree);
-        // console.log("subTree", subTree);
+      },
+      {
+        scheduler() {
+          console.log("没有执行update逻辑  转而执行scheduler参数");
+          queueJobs(instance.update);
+        },
       }
-    });
+    );
   }
 
   // 卸载children
