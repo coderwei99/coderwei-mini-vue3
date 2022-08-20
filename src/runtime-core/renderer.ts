@@ -2,6 +2,7 @@ import { effect } from "../reactive/effect";
 import { EMPTY_OBJECT, isFunction, isObject, isOn, isString } from "../shared";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
+import { shouldUpdateComponent } from "./componentUpdateUtils";
 import { createAppAPI } from "./createApp";
 import { Fragment, Text } from "./vnode";
 
@@ -418,22 +419,27 @@ export function createRenderer(options?) {
   ) {
     if (n1) {
       // 如果n1有值说明是更新  如果n1 没有值说明是挂载操作
-      updateComponent(n1, n2, container, parentComponent);
+      updateComponent(n1, n2);
     } else {
       processComponent(n2, container, parentComponent);
     }
   }
 
-  function updateComponent(
-    n1: any,
-    n2: any,
-    container: any,
-    parentComponent: any
-  ) {
+  function updateComponent(n1: any, n2: any) {
     console.log("更新操作");
     const instance = (n2.component = n1.component);
-    instance.next = n2;
-    instance.update();
+
+    /**
+     * 判断页面内的组件是否需要更新
+     * 考虑一下 我们这里的更新逻辑是处理子组件的 当前组件的数据发生变化的时候 我们需要调用这个update方法吗？ 明显不需要
+     */
+    if (shouldUpdateComponent(n1, n2)) {
+      instance.next = n2;
+      instance.update();
+    } else {
+      n2.el = n1.el;
+      instance.el = n2;
+    }
   }
 
   function setupRenderEffect(instance: any, initialvnode: any, container: any) {

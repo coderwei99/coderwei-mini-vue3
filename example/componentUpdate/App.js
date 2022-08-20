@@ -9,13 +9,23 @@ export default {
   name: "App",
   setup() {
     const msg = ref("123");
+    let count = ref(1);
     window.msg = msg
 
     const changeChildProps = () => {
       msg.value = "456";
     };
 
-    return { msg, changeChildProps };
+    const changeCount = () => {
+      count.value++
+    }
+
+    return {
+      msg,
+      count,
+      changeChildProps,
+      changeCount,
+    };
   },
 
   render() {
@@ -31,6 +41,8 @@ export default {
       h(Child, {
         msg: this.msg,
       }),
+      h('p', {}, `count:${this.count}`),
+      h('button', { onClick: this.changeCount }, `addBtn`)
     ]);
   },
 };
