@@ -10,6 +10,12 @@
  *
  */
 
+import { NodeTypes } from "./ast";
+
+// 定义开始标识符和结束标识符
+const OPENDELIMITER = "{{";
+const CLOSEDELIMITER = "}}";
+
 export function baseParse(content: string) {
   const context = createParseContext(content);
   return createRoot(parseChildren(context));
@@ -17,7 +23,10 @@ export function baseParse(content: string) {
 
 function parseChildren(context) {
   const nodes: any[] = [];
-  const node = parseInterpolation(context);
+  let node;
+  if (context.source.startsWith(OPENDELIMITER)) {
+    node = parseInterpolation(context);
+  }
   nodes.push(node);
   return nodes;
 }
@@ -25,19 +34,25 @@ function parseChildren(context) {
 function parseInterpolation(context) {
   // "{{message}}"
   // "message}}"
-  const closeIndex = context.source.indexOf("}}");
+
+  const closeIndex = context.source.indexOf(
+    CLOSEDELIMITER,
+    OPENDELIMITER.length
+  );
   console.log(closeIndex, "clostIndex");
 
-  context.source = context.source.slice(2);
+  advanceBy(context, OPENDELIMITER.length);
   console.log(context.source.slice(0, closeIndex - 2));
-  const content = context.source.slice(0, closeIndex - 2);
-  context.source = context.source.slice(closeIndex);
+  const rawContent = context.source.slice(0, closeIndex - 2);
+  const content = rawContent.trim();
+  advanceBy(context, closeIndex);
+
   console.log(context.source, "处理完成之后  content");
 
   return {
-    type: "interpolation",
+    type: NodeTypes.INTERPOLATION,
     content: {
-      type: "simple_expression",
+      type: NodeTypes.SIMPLE_EXPRESSION,
       content: content,
     },
   };
@@ -54,4 +69,9 @@ function createRoot(children) {
   return {
     children,
   };
+}
+
+// 插值语法的推进函数
+function advanceBy(context: any, length: number) {
+  context.source = context.source.slice(length);
 }
