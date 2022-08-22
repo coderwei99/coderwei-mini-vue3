@@ -23,6 +23,7 @@ function queueFlush() {
 
 function FlushJobs() {
   showExecte = false;
+
   let job;
   while ((job = queue.shift())) {
     job && job();

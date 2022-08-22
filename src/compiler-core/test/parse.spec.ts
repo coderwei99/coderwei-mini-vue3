@@ -14,4 +14,24 @@ describe("Parse", () => {
       });
     });
   });
+
+  describe("element", () => {
+    test("simple element", () => {
+      const ast = baseParse("<div></div>");
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: "div",
+      });
+    });
+  });
+
+  describe("text", () => {
+    test("simple text", () => {
+      const ast = baseParse("mini vue");
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.TEXT,
+        content: "mini vue",
+      });
+    });
+  });
 });

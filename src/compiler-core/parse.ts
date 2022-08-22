@@ -16,6 +16,12 @@ import { NodeTypes } from "./ast";
 const OPENDELIMITER = "{{";
 const CLOSEDELIMITER = "}}";
 
+// 定义标签的开始于结束
+export enum TagTypes {
+  TAGSSTART,
+  TAGSEND,
+}
+
 export function baseParse(content: string) {
   const context = createParseContext(content);
   return createRoot(parseChildren(context));
@@ -26,6 +32,16 @@ function parseChildren(context) {
   let node;
   if (context.source.startsWith(OPENDELIMITER)) {
     node = parseInterpolation(context);
+  } else if (context.source[0] === "<") {
+    // console.log("parse");
+    if (/[a-z]/i.test(context.source[1])) {
+      node = parseElement(context);
+    }
+  }
+
+  if (!node) {
+    // 如果node没有值的情况下 我们默认当做text类型来处理 就是普通文本
+    node = parseText(context);
   }
   nodes.push(node);
   return nodes;
@@ -74,4 +90,34 @@ function createRoot(children) {
 // 插值语法的推进函数
 function advanceBy(context: any, length: number) {
   context.source = context.source.slice(length);
+}
+function parseElement(context: any) {
+  const element = parasTag(context, TagTypes.TAGSSTART); //处理开始标签
+  parasTag(context, TagTypes.TAGSEND); //处理结束标签
+  console.log(context.source);
+
+  return element;
+}
+function parasTag(context: any, type: TagTypes) {
+  const match: any = /^<\/?([a-z]*)/i.exec(context.source);
+  console.log(match, "------------");
+
+  advanceBy(context, match[0].length); //推进开始标签
+  advanceBy(context, 1); //推进多余的>
+
+  const tag = match[1];
+
+  if (type == TagTypes.TAGSEND) return; //如果是结束标签 就没必要返回内容了
+  return {
+    type: NodeTypes.ELEMENT,
+    tag,
+  };
+}
+function parseText(context: any): any {
+  const content = context.source.slice(0, context.source.length);
+  advanceBy(context, content.length);
+  return {
+    type: NodeTypes.TEXT,
+    content,
+  };
 }
