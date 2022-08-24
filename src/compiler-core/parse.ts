@@ -24,26 +24,54 @@ export enum TagTypes {
 
 export function baseParse(content: string) {
   const context = createParseContext(content);
-  return createRoot(parseChildren(context));
+
+  return createRoot(parseChildren(context, []));
 }
 
-function parseChildren(context) {
-  const nodes: any[] = [];
-  let node;
-  if (context.source.startsWith(OPENDELIMITER)) {
-    node = parseInterpolation(context);
-  } else if (context.source[0] === "<") {
-    // console.log("parse");
-    if (/[a-z]/i.test(context.source[1])) {
-      node = parseElement(context);
+function isEnd(context, ancestors) {
+  // 是否结束
+  // 1. 当遇到结束标签 比如:</div>
+  // 2. 当context.source.length === 0
+  const s = context.source;
+  console.log(ancestors);
+  if (s.startsWith("</")) {
+    for (let i = 0; i < ancestors.length; i++) {
+      const tag = ancestors[i].tag;
+
+      if (s.slice(2, 2 + tag.length) == tag) {
+        return true;
+      }
     }
   }
+  // if (parentTag && s.startsWith(`</${parentTag}>`)) {
+  //   return true;
+  // }
 
-  if (!node) {
-    // 如果node没有值的情况下 我们默认当做text类型来处理 就是普通文本
-    node = parseText(context);
+  return !s;
+}
+
+function parseChildren(context, ancestors) {
+  // console.log(context.source, "-------------");
+
+  const nodes: any[] = [];
+  while (!isEnd(context, ancestors)) {
+    let node;
+    if (context.source.startsWith(OPENDELIMITER)) {
+      node = parseInterpolation(context);
+    } else if (context.source[0] === "<") {
+      // console.log("parse");
+      if (/[a-z]/i.test(context.source[1])) {
+        node = parseElement(context, ancestors);
+      }
+    }
+
+    if (!node) {
+      // 如果node没有值的情况下 我们默认当做text类型来处理 就是普通文本
+      node = parseText(context);
+    }
+    nodes.push(node);
   }
-  nodes.push(node);
+
   return nodes;
 }
 
@@ -55,15 +83,15 @@ function parseInterpolation(context) {
     CLOSEDELIMITER,
     OPENDELIMITER.length
   );
-  console.log(closeIndex, "clostIndex");
+  // console.log(closeIndex, "clostIndex");
 
   advanceBy(context, OPENDELIMITER.length);
-  console.log(context.source.slice(0, closeIndex - 2));
+  // console.log(context.source.slice(0, closeIndex - 2));
   const rawContent = context.source.slice(0, closeIndex - 2);
   const content = rawContent.trim();
   advanceBy(context, closeIndex);
 
-  console.log(context.source, "处理完成之后  content");
+  // console.log(context.source, "处理完成之后  content");
 
   return {
     type: NodeTypes.INTERPOLATION,
@@ -91,14 +119,34 @@ function createRoot(children) {
 function advanceBy(context: any, length: number) {
   context.source = context.source.slice(length);
 }
-function parseElement(context: any) {
-  const element = parasTag(context, TagTypes.TAGSSTART); //处理开始标签
-  parasTag(context, TagTypes.TAGSEND); //处理结束标签
-  console.log(context.source);
+
+function parseElement(context: any, ancestors) {
+  const element: any = parasTag(context, TagTypes.TAGSSTART); //处理开始标签
+  ancestors.push(element);
+  element.children = parseChildren(context, ancestors);
+  ancestors.pop();
+  console.log(
+    context.source,
+    context.source.slice(2, 2 + element.tag.length),
+    element.tag,
+    "--------------------"
+  );
+
+  if (context.source.slice(2, 2 + element.tag.length) == element.tag) {
+    // 先判断结束标签是否和开始标签一致
+    parasTag(context, TagTypes.TAGSEND); //处理结束标签
+  } else {
+    throw new Error("没有结束标签");
+  }
+
+  // console.log(context.source);
 
   return element;
 }
+
 function parasTag(context: any, type: TagTypes) {
+  console.log(context.source);
+
   const match: any = /^<\/?([a-z]*)/i.exec(context.source);
   console.log(match, "------------");
 
@@ -113,8 +161,22 @@ function parasTag(context: any, type: TagTypes) {
     tag,
   };
 }
+
 function parseText(context: any): any {
-  const content = context.source.slice(0, context.source.length);
+  let endIndex = context.source.length;
+  let endToken = ["<", "{{"];
+
+  for (let i = 0; i < endToken.length; i++) {
+    const index = context.source.indexOf(endToken[i]);
+    console.log(index, "index");
+    if (index !== -1 && endIndex > index) {
+      endIndex = index;
+    }
+  }
+
+  const content = context.source.slice(0, endIndex);
+  // console.log(content);
+
   advanceBy(context, content.length);
   return {
     type: NodeTypes.TEXT,
