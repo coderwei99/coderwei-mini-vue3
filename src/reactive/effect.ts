@@ -34,6 +34,8 @@ export class EffectDepend {
  * 删除依赖
  */
 export function cleanupEffect(effect: EffectDepend) {
+  console.log(effect, "effect");
+  debugger;
   for (const dep of effect.deps) {
     dep.delete(effect);
     effect.active = false;
@@ -69,6 +71,7 @@ export function tarckEffect(dep: Dep) {
   // 如果set中已经有了对应的activeEffect依赖 那么就不需要再次进行收集依赖
   if (dep.has(activeEffect)) return;
   dep.add(activeEffect);
+  console.log(dep, "dep");
   activeEffect?.deps.push(dep);
 }
 

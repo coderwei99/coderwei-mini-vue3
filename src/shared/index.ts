@@ -13,6 +13,11 @@ export function isString(value: unknown) {
   return typeof value == "string";
 }
 
+// 判断是否是相同的值 如果ref是相同的值 就不需要触发依赖
+export function hasChanged(value, oldValue) {
+  return Object.is(value, oldValue);
+}
+
 // 判断是否为数组
 export const isArray = Array.isArray;
 

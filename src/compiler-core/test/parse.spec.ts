@@ -57,7 +57,7 @@ describe("Parse", () => {
     });
   });
 
-  test("hello word", () => {
+  test("Nestedn element", () => {
     const ast = baseParse("<div><p>hi</p>{{message}}</div>");
     expect(ast.children[0]).toStrictEqual({
       type: NodeTypes.ELEMENT,

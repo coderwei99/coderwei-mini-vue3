@@ -1,7 +1,7 @@
-import { isTracking, tarckEffect, triggerEffect } from "./effect";
+import { effect, isTracking, tarckEffect, triggerEffect } from "./effect";
 import { isReactive, reactive } from "./reactive";
 import { Dep } from "./effect";
-import { isObject } from "../shared/index";
+import { hasChanged, isObject } from "../shared/index";
 class RefImpl<T> {
   private _value: T;
   private _rawValue: T;
@@ -33,11 +33,6 @@ export function trackRefValue(dep) {
   if (isTracking()) {
     tarckEffect(dep);
   }
-}
-
-// 判断是否是相同的值 如果ref是相同的值 就不需要触发依赖
-export function hasChanged(value, oldValue) {
-  return Object.is(value, oldValue);
 }
 
 export function ref<T>(value: T) {
