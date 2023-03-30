@@ -1,7 +1,7 @@
-import { transform } from "../transform";
-import { generate } from "../codegen";
-import { baseParse } from "../parse";
-import { transformsExpression } from "../transforms/transformsExpression";
+import { transform } from "../src/transform";
+import { generate } from "../src/codegen";
+import { baseParse } from "../src/parse";
+import { transformsExpression } from "../src/transforms/transformsExpression";
 
 describe("codegen", () => {
   it("happy path", () => {
