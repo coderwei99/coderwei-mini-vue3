@@ -1,5 +1,9 @@
 import { NodeTypes } from "./ast";
-import { helperNameMap, TO_DISPLAY_STRING } from "./runtimeHelpers";
+import {
+  CREATE_ELEMENT_BLOCK,
+  helperNameMap,
+  TO_DISPLAY_STRING,
+} from "./runtimeHelpers";
 
 export function generate(ast) {
   const context = createCodegenContext();
@@ -50,6 +54,10 @@ function getNode(ast, context) {
       genExpression(ast, context);
       break;
 
+    case NodeTypes.ELEMENT:
+      genElement(ast, context);
+      break;
+
     default:
       break;
   }
@@ -69,6 +77,13 @@ function genInterpolation(ast: any, context: any) {
   const { push } = context;
   push(`_${helperNameMap[TO_DISPLAY_STRING]}(`);
   getNode(ast.content, context);
+  push(")");
+}
+
+function genElement(ast, context) {
+  const { push } = context;
+  push(`_${helperNameMap[CREATE_ELEMENT_BLOCK]}(`);
+  push(`'${ast.tag}'`);
   push(")");
 }
 
