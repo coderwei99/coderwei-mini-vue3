@@ -1,3 +1,4 @@
+import { isString } from "../../shared";
 import { NodeTypes } from "./ast";
 import {
   CREATE_ELEMENT_BLOCK,
@@ -58,6 +59,10 @@ function getNode(ast, context) {
       genElement(ast, context);
       break;
 
+    case NodeTypes.COMPOUND_EXPRESSION:
+      genCompundExpression(ast, context);
+      break;
+
     default:
       break;
   }
@@ -83,8 +88,41 @@ function genInterpolation(ast: any, context: any) {
 function genElement(ast, context) {
   const { push } = context;
   push(`_${helperNameMap[CREATE_ELEMENT_BLOCK]}(`);
-  push(`'${ast.tag}'`);
+  genNodeList(genNullable([ast.tag, ast.prop, ast.children]), context);
+  // getNode(ast.children, context);
   push(")");
+}
+
+function genNullable(nodesList: any[]) {
+  return nodesList.map(node => node || "null");
+}
+
+function genNodeList(nodesList: any[], context) {
+  const { push } = context;
+  for (let i = 0; i < nodesList.length; i++) {
+    let node = nodesList[i];
+    if (isString(node)) {
+      push(node);
+    } else {
+      getNode(node, context);
+    }
+    if (i < nodesList.length - 1) {
+      push(",");
+    }
+  }
+}
+
+function genCompundExpression(ast: any, context: any) {
+  const { children } = ast;
+  const { push } = context;
+
+  children.forEach(child => {
+    if (isString(child)) {
+      push(child);
+    } else {
+      getNode(child, context);
+    }
+  });
 }
 
 function createCodegenContext() {

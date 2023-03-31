@@ -14,7 +14,7 @@ export const transform = (ast, options: any = {}) => {
 
   dfs(ast, context);
 
-  ast.codegenNode = ast.children[0];
+  createRootCodegen(ast);
 
   ast.helpers = [...context.helpers.keys()];
 };
@@ -23,8 +23,10 @@ export const transform = (ast, options: any = {}) => {
 const dfs = (node, context) => {
   // 修改text文本的值 外面传入的修改方法 如何修改给外部决定如何执行
   const nodeTransform = context.nodeTransform;
+  const exitFns: any = [];
   nodeTransform.forEach(fn => {
-    fn && fn(node, context);
+    const exitFn = fn(node, context);
+    if (exitFn) exitFns.push(exitFn);
   });
 
   // 插值语法  在context.helps(数组)上添加一项toDisplayString，用于后续生成js的时候引入，后续插值语法生成的js需要借助这些工具函数
@@ -41,7 +43,23 @@ const dfs = (node, context) => {
     default:
       break;
   }
+
+  let len = exitFns.length;
+  console.log(len);
+
+  while (len--) {
+    exitFns[len]();
+  }
 };
+
+function createRootCodegen(ast: any) {
+  const child = ast.children[0];
+  if (child.type === NodeTypes.ELEMENT) {
+    ast.codegenNode = child.codegenNode;
+  } else {
+    ast.codegenNode = ast.children[0];
+  }
+}
 
 // 遍历ast语法树children
 function dfsChildren(node: any, context: any) {
