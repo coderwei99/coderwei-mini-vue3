@@ -35,7 +35,6 @@ export class EffectDepend {
  */
 export function cleanupEffect(effect: EffectDepend) {
   console.log(effect, "effect");
-  debugger;
   for (const dep of effect.deps) {
     dep.delete(effect);
     effect.active = false;

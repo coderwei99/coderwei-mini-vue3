@@ -438,7 +438,7 @@ export function createRenderer(options?) {
           // console.log("sub", instance.render());
           // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
 
-          const subTree = instance.render.call(instance.proxy);
+          const subTree = instance.render.call(instance.proxy, instance.proxy);
           instance.subTree = subTree;
           // 对子树进行patch操作
           patch(null, subTree, container, instance);
@@ -460,7 +460,7 @@ export function createRenderer(options?) {
             updateComponentPreRender(instance, next);
           }
           // 新的vnode
-          const subTree = instance.render.call(instance.proxy);
+          const subTree = instance.render.call(instance.proxy, instance.proxy);
           // 老的vnode
           const prevSubTree = instance.subTree;
           // 存储这一次的vnode，下一次更新逻辑作为老的vnode

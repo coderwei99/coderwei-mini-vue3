@@ -99,9 +99,14 @@ function handleSetupResult(instance: any, setupResult: any) {
 
 function finishComponentSetup(instance: any) {
   const component = instance.type;
-  if (instance) {
-    instance.render = component.render;
+  console.log("---------------------------------");
+  if (compiler && !component.rennder) {
+    if (component.template) {
+      component.render = compiler(component.template);
+    }
   }
+
+  instance.render = component.render;
 }
 
 // provide 函数的实现
@@ -136,4 +141,9 @@ export function inject(key: string | any, defaultValue?: any) {
       return defaultValue;
     }
   }
+}
+
+let compiler;
+export function createCompiler(_compiler) {
+  compiler = _compiler;
 }
