@@ -7,14 +7,16 @@
 我想进大厂
 
 ## ✏ 相关参考
-[Vue3核心原理代码解构](https://juejin.cn/column/7089244418703622175)
+
+[Vue3 核心原理代码解构](https://juejin.cn/column/7089244418703622175)
 
 [崔学社](https://github.com/cuixiaorui/mini-vue)
 
-[Vue.js的设计与实现](https://item.jd.com/13611922.html)
+[Vue.js 的设计与实现](https://item.jd.com/13611922.html)
 
 ## 🛠 功能清单
-reactivity部分
+
+reactivity 部分
 
 - [x] 实现 effect & reactive 依赖收集和依赖触发
 - [x] 实现 effect 返回 runner
@@ -33,29 +35,36 @@ reactivity部分
 - [x] 实现 proxyRefs 功能
 - [x] 实现 computed 计算属性功能
 
-
-runtime-core部分
+runtime-core 部分
 
 - [x] 实现初始化 component 主流程
-- [x] 实现初始化 element 主流程  （通过递归patch拆箱操作，最终都会走向mountElement这一步）
-- [x] 实现组件代理对象  （instance.proxy解决`render()`函数的this指向问题）
-- [x] 实现 shapeFlags  （利用位运算 左移运算 对vnode添加标识，标识是什么类型：子级文本，子级数组，组件，HTML元素）
-- [x] 实现注册事件功能     （通过在vnode.props识别 props对象的key是以on开头并且后一个字母是大写来判断是否是事件）
-- [x] 实现组件 props 功能   （在render的h函数中可以用this访问到，并且是shallowReadonly）
-- [x] 实现组件 emit 功能   （获取组件的props并判断props的'on+事件名'是否是emit的第一个参数：事件名匹配，是的话就执行props的里面的事件）
+- [x] 实现初始化 element 主流程 （通过递归 patch 拆箱操作，最终都会走向 mountElement 这一步）
+- [x] 实现组件代理对象 （instance.proxy 解决`render()`函数的 this 指向问题）
+- [x] 实现 shapeFlags （利用位运算 左移运算 对 vnode 添加标识，标识是什么类型：子级文本，子级数组，组件，HTML 元素）
+- [x] 实现注册事件功能 （通过在 vnode.props 识别 props 对象的 key 是以 on 开头并且后一个字母是大写来判断是否是事件）
+- [x] 实现组件 props 功能 （在 render 的 h 函数中可以用 this 访问到，并且是 shallowReadonly）
+- [x] 实现组件 emit 功能 （获取组件的 props 并判断 props 的'on+事件名'是否是 emit 的第一个参数：事件名匹配，是的话就执行 props 的里面的事件）
 - [x] 实现组件 slots 功能 (具名插槽&作用域插槽)
-- [x] 实现 Fragment 和 Text 类型节点  (避免固定死外层嵌套某个元素 比如说div，使用Fragment/Text标识符 直接不渲染外层的div，直接走mountChildren函数  处理children 外层用户需要什么节点进行包裹自行选择)
+- [x] 实现 Fragment 和 Text 类型节点 (避免固定死外层嵌套某个元素 比如说 div，使用 Fragment/Text 标识符 直接不渲染外层的 div，直接走 mountChildren 函数 处理 children 外层用户需要什么节点进行包裹自行选择)
 - [x] 实现 getCurrentInstance
 - [x] 实现 provide-inject 功能
-- [ ] 实现自定义渲染器 custom renderer
+- [x] 实现自定义渲染器 custom renderer
 - [x] 更新 element 流程搭建
 - [x] 更新 element 的 props
 - [x] 更新 element 的 children
 - [x] 更新 element 的双端对比 diff 算法
 - [x] 实现组件更新功能
-- [x] nextTick 的实现 (vue3视图更新是异步的，如果我们想在组件更新的时候拿到当前组件的实例或者是操作当前组件的某些数据、dom，正常情况下是拿不到的，因为我们写在script标签内的代码都是同步的，那个时候视图还没有更新，拿到的自然都是旧数据)
+- [x] nextTick 的实现 (vue3 视图更新是异步的，如果我们想在组件更新的时候拿到当前组件的实例或者是操作当前组件的某些数据、dom，正常情况下是拿不到的，因为我们写在 script 标签内的代码都是同步的，那个时候视图还没有更新，拿到的自然都是旧数据)
 
+compiler-core 部分
 
-## 遗留bug
-> 先走完整个流程，这里记录调试过程中发现的小bug，走完整个流程在处理这些bug，顺便迫使自己重新梳理整个流程
-- [x] 目前处理子组件children的逻辑有问题，当子组件的children为字符串的时候，渲染会出错
+- [x] 实现 parse 模块
+- [x] 实现 transform 模块
+- [x] 实现 codegen 模块
+- [x] 定义统一的出口(定义 baseCompiler 函数)
+
+## 遗留 bug
+
+> 先走完整个流程，这里记录调试过程中发现的小 bug，走完整个流程在处理这些 bug，顺便迫使自己重新梳理整个流程
+
+- [x] 目前处理子组件 children 的逻辑有问题，当子组件的 children 为字符串的时候，渲染会出错
