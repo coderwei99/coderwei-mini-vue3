@@ -3,3 +3,11 @@ build
 coverage
 .gitignore
 *.html
+example
+lib
+pnpm-lock.yaml
+package.json
+babel.config.js
+README.md
+rollup.config.js
+tsconfig.json
