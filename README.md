@@ -1,13 +1,10 @@
 # VUE-NEXT-3.x
-
 手写 vue3 核心源码，理解其原理 by myself
 
 ## 🙌 目的
-
 我想进大厂
 
 ## ✏ 相关参考
-
 [Vue3 核心原理代码解构](https://juejin.cn/column/7089244418703622175)
 
 [崔学社](https://github.com/cuixiaorui/mini-vue)
@@ -17,7 +14,6 @@
 ## 🛠 功能清单
 
 reactivity 部分
-
 - [x] 实现 effect & reactive 依赖收集和依赖触发
 - [x] 实现 effect 返回 runner
 - [x] 实现 effect 的 scheduler 功能
@@ -36,7 +32,6 @@ reactivity 部分
 - [x] 实现 computed 计算属性功能
 
 runtime-core 部分
-
 - [x] 实现初始化 component 主流程
 - [x] 实现初始化 element 主流程 （通过递归 patch 拆箱操作，最终都会走向 mountElement 这一步）
 - [x] 实现组件代理对象 （instance.proxy 解决`render()`函数的 this 指向问题）
@@ -57,14 +52,15 @@ runtime-core 部分
 - [x] nextTick 的实现 (vue3 视图更新是异步的，如果我们想在组件更新的时候拿到当前组件的实例或者是操作当前组件的某些数据、dom，正常情况下是拿不到的，因为我们写在 script 标签内的代码都是同步的，那个时候视图还没有更新，拿到的自然都是旧数据)
 
 compiler-core 部分
-
 - [x] 实现 parse 模块
 - [x] 实现 transform 模块
 - [x] 实现 codegen 模块
 - [x] 定义统一的出口(定义 baseCompiler 函数)
 
-## 遗留 bug
+monorepo
+- [x] 使用monorepo重构整个项目
 
+## 遗留 bug
 > 先走完整个流程，这里记录调试过程中发现的小 bug，走完整个流程在处理这些 bug，顺便迫使自己重新梳理整个流程
 
 - [x] 目前处理子组件 children 的逻辑有问题，当子组件的 children 为字符串的时候，渲染会出错
