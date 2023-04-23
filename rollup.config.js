@@ -1,6 +1,6 @@
 import typescript from "@rollup/plugin-typescript";
 export default {
-  input: "./src/index.ts",
+  input: "./packages/vue/src/index.ts",
   output: [
     {
       file: "./lib/vue3.cjs.js",

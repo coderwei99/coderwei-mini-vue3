@@ -1,4 +1,4 @@
-import { isString } from '../../shared'
+import { isString } from '@coderwei-mini-vue3/shared'
 import { NodeTypes } from './ast'
 import { CREATE_ELEMENT_BLOCK, helperNameMap, TO_DISPLAY_STRING } from './runtimeHelpers'
 
