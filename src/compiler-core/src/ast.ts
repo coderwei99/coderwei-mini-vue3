@@ -4,5 +4,5 @@ export const enum NodeTypes {
   ELEMENT,
   TEXT,
   ROOT,
-  COMPOUND_EXPRESSION,
+  COMPOUND_EXPRESSION
 }

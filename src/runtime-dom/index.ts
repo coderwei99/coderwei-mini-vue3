@@ -1,34 +1,34 @@
 // 定义关于浏览器的渲染器
-import { isOn } from "../shared/index";
-import { createRenderer } from "../runtime-core/renderer";
+import { isOn } from '../shared/index'
+import { createRenderer } from '../runtime-core/renderer'
 
 function createElement(type) {
-  console.log("create el 操作", type);
-  const element = document.createElement(type);
-  return element;
+  console.log('create el 操作', type)
+  const element = document.createElement(type)
+  return element
 }
 
 function createText(text) {
-  return document.createTextNode(text);
+  return document.createTextNode(text)
 }
 
 function setText(node: HTMLElement, text) {
-  console.log("调用到这里了", node, text);
+  console.log('调用到这里了', node, text)
 
-  node.nodeValue = text;
+  node.nodeValue = text
 }
 
 function setElementText(el, text) {
-  console.log("SetElementText", el, text);
-  el.textContent = text;
+  console.log('SetElementText', el, text)
+  el.textContent = text
 }
 
 function patchProp(el, key, preValue, nextValue) {
   // preValue 之前的值
   // 为了之后 update 做准备的值
   // nextValue 当前的值
-  console.log(`PatchProp 设置属性:${key} 值:${nextValue}`);
-  console.log(`key: ${key} 之前的值是:${preValue}`);
+  console.log(`PatchProp 设置属性:${key} 值:${nextValue}`)
+  console.log(`key: ${key} 之前的值是:${preValue}`)
 
   if (isOn(key)) {
     // 添加事件处理函数的时候需要注意一下
@@ -36,44 +36,44 @@ function patchProp(el, key, preValue, nextValue) {
     //    那么就需要把之前 add 的函数给存起来，后面删除的时候需要用到
     // 2. nextValue 有可能是匿名函数，当对比发现不一样的时候也可以通过缓存的机制来避免注册多次
     // 存储所有的事件函数
-    const invokers = el._vei || (el._vei = {});
-    const existingInvoker = invokers[key];
+    const invokers = el._vei || (el._vei = {})
+    const existingInvoker = invokers[key]
     if (nextValue && existingInvoker) {
       // patch
       // 直接修改函数的值即可
-      existingInvoker.value = nextValue;
+      existingInvoker.value = nextValue
     } else {
-      const eventName = key.slice(2).toLowerCase();
+      const eventName = key.slice(2).toLowerCase()
       if (nextValue) {
-        const invoker = (invokers[key] = nextValue);
-        el.addEventListener(eventName, invoker);
+        const invoker = (invokers[key] = nextValue)
+        el.addEventListener(eventName, invoker)
       } else {
-        el.removeEventListener(eventName, existingInvoker);
-        invokers[key] = undefined;
+        el.removeEventListener(eventName, existingInvoker)
+        invokers[key] = undefined
       }
     }
   } else {
     if (nextValue === null || nextValue === undefined) {
-      el.removeAttribute(key);
+      el.removeAttribute(key)
     } else {
-      el.setAttribute(key, nextValue);
+      el.setAttribute(key, nextValue)
     }
   }
 }
 
 function insert(child, parent, anchor = null) {
-  console.log("Insert操作");
-  parent.insertBefore(child, anchor);
+  console.log('Insert操作')
+  parent.insertBefore(child, anchor)
 }
 
 function remove(child) {
-  const parent = child.parentNode;
+  const parent = child.parentNode
   if (parent) {
-    parent.removeChild(child);
+    parent.removeChild(child)
   }
 }
 
-let renderer;
+let renderer
 
 function ensureRenderer() {
   // 如果 renderer 有值的话，那么以后都不会初始化了
@@ -86,13 +86,13 @@ function ensureRenderer() {
       setElementText,
       patchProp,
       insert,
-      remove,
+      remove
     }))
-  );
+  )
 }
 
 export const createApp = (...args) => {
-  return ensureRenderer().createApp(...args);
-};
+  return ensureRenderer().createApp(...args)
+}
 
-export * from "../runtime-core";
+export * from '../runtime-core'

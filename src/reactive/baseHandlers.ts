@@ -5,5 +5,5 @@
  * @returns
  */
 export function createReactiveObject<T extends object>(target: T, handlers) {
-  return new Proxy(target, handlers);
+  return new Proxy(target, handlers)
 }

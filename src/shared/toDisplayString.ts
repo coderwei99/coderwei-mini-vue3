@@ -1,3 +1,3 @@
 export function toDisplayString(val) {
-  return String(val);
+  return String(val)
 }

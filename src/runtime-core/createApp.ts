@@ -1,4 +1,4 @@
-import { createVNode } from "./vnode";
+import { createVNode } from './vnode'
 
 export function createAppAPI(render) {
   return function createApp(rootComponent: any) {
@@ -7,12 +7,12 @@ export function createAppAPI(render) {
     const app = {
       _component: rootComponent,
       mount(rootContainer: any) {
-        const vnode = createVNode(rootComponent);
-        render(vnode, rootContainer);
-      },
-    };
+        const vnode = createVNode(rootComponent)
+        render(vnode, rootContainer)
+      }
+    }
 
     // 返回的是一个对象 所以我们才可以链式调用mount方法
-    return app;
-  };
+    return app
+  }
 }
