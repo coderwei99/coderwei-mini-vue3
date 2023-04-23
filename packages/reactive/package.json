@@ -1,0 +1,19 @@
+{
+  "name": "@coderwei-mini-vue3/reactive",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@coderwei-mini-vue3/shared": "workspace:^1.0.0"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^@coderwei-mini-vue3/(.*)$": "<rootDir>/../$1/src"
+    }
+  }
+}
