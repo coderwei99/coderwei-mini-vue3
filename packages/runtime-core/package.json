@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "@coderwei-mini-vue3/runtime-core",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -11,5 +11,10 @@
   "dependencies": {
     "@coderwei-mini-vue3/reactive": "workspace:^1.0.0",
     "@coderwei-mini-vue3/shared": "workspace:^1.0.0"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^@coderwei-mini-vue3/(.*)$": "<rootDir>/../$1/src"
+    }
   }
 }
