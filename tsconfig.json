@@ -6,7 +6,8 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "types": [
-      "vitest/globals"
+      "vitest/globals",
+      "node"
     ],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
