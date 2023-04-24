@@ -11,3 +11,4 @@ babel.config.js
 README.md
 rollup.config.js
 tsconfig.json
+coverage
