@@ -26,6 +26,6 @@
   },
   "include": [
     "packages/*/src",
-    "packages/*/__tests__"
+    "packages/*/test"
   ]
 }
