@@ -29,7 +29,7 @@ describe('readonly', () => {
       username: 'ghx'
     }
     let readonlyObj = readonly(original)
-    const warn = jest.spyOn(console, 'warn')
+    const warn = vi.spyOn(console, 'warn')
     // 给readonly做set操作，将会得到一个warning
     // readonlyObj.username = "danaizi";
     // expect(warn).toHaveBeenCalled();

@@ -1,5 +1,6 @@
 import { computed } from '../src/computed'
 import { reactive } from '../src/reactive'
+import { vi } from 'vitest'
 
 describe('computed', () => {
   it('should return updated value', () => {
@@ -10,7 +11,7 @@ describe('computed', () => {
 
   it('should compute lazily', () => {
     const value = reactive({ foo: 1 }) // 创建一个reactive对象
-    const getter = jest.fn(() => value.foo) // 通过jest.fn()创建一个模拟函数，后续会检测被调用该函数次数
+    const getter = vi.fn(() => value.foo) // 通过vi.fn()创建一个模拟函数，后续会检测被调用该函数次数
     const cValue = computed(getter) // 创建一个computed对象，并传入getter函数
 
     // lazy功能

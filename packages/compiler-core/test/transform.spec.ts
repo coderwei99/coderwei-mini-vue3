@@ -12,7 +12,6 @@ describe('transform', () => {
       transform(ast, {
         nodeTransform: [plugins]
       })
-      console.log(ast.codegenNode.children, '-------------------')
 
       const textNode = ast.children[0].children[0]
       expect(textNode.content).toBe('hi,mini-vue')
