@@ -1,7 +1,8 @@
 const queue: any[] = []
+let activePreFlushCbs: any[] = []
 let showExecte = false
 
-export function nextTick(fn: () => void) {
+export function nextTick(fn?: () => void) {
   return fn ? Promise.resolve().then(fn) : Promise.resolve()
 }
 
@@ -18,14 +19,37 @@ function queueFlush() {
   if (showExecte) return
   showExecte = true
 
-  nextTick(FlushJobs)
+  nextTick(flushJobs)
 }
 
-function FlushJobs() {
+function flushJobs() {
   showExecte = false
 
+  /** 增加个判断条件，因为目前为止，我们视图的异步渲染和watchEffect的异步执行 都是走到这个位置，而在这里watchEffect的第二个参数的flush是pre的时候，需要在视图更新之前执行
+      所以我们可以先在这里执行我们收集起来的需要在视图更新之前执行的函数
+  */
+  // for (let i = 0; i < activePreFlushCbs.length; i++) {
+  //   activePreFlushCbs[i]()
+  // }
+  let o
+  while ((o = activePreFlushCbs.shift())) {
+    o && o()
+  }
+
+  // 下面是处理视图的更新的 vue有个核心概念: 视图的异步渲染
   let job
+  console.log('view is update')
+
   while ((job = queue.shift())) {
     job && job()
   }
+}
+
+export function queuePreFlushCb(fn) {
+  queueFns(fn, activePreFlushCbs)
+}
+
+function queueFns(fn: any, activePreFlushCbs: any[]) {
+  activePreFlushCbs.push(fn)
+  queueFlush()
 }
