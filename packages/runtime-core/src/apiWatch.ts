@@ -1,5 +1,5 @@
-import { EffectDepend } from '@coderwei-mini-vue3/reactive'
-import { extend } from '@coderwei-mini-vue3/shared'
+import { EffectDepend, isReactive, isRef, Ref } from '@coderwei-mini-vue3/reactive'
+import { extend, isArray, isFunction, isObject } from '@coderwei-mini-vue3/shared'
 import { queuePosstFlushCb, queuePreFlushCb } from './scheduler'
 
 export interface watchEffectOptions {
@@ -8,25 +8,46 @@ export interface watchEffectOptions {
   onTrigger?: (event) => void
 }
 
+type WatchSourceType<T = any> =
+  | Ref<T> // ref
+  | (() => T) // getter
+  | T extends object
+  ? T
+  : never // 响应式对象
+
+export interface watchOptions extends watchEffectOptions {
+  deep?: boolean
+  immediate?: boolean
+}
+
 export type watchFnTypes = (onCleanup?) => void
 
-export function watchEffect(fn: watchFnTypes, options: watchEffectOptions = {}) {
-  return doWatch(fn, options)
+export function watchEffect(source: watchFnTypes, options: watchEffectOptions = {}) {
+  return doWatch(source, null, options)
 }
 
 // watchPostEffect就是watchEffect的options传递了post
-export function watchPostEffect(fn: watchFnTypes, options: watchEffectOptions = {}) {
-  return doWatch(fn, extend({}, options, { flush: 'post' }))
+export function watchPostEffect(source: watchFnTypes, options: watchEffectOptions = {}) {
+  return doWatch(source, null, extend({}, options, { flush: 'post' }))
 }
 
 // watchSyncEffect就是watchEffect的options传递了sync
-export function watchSyncEffect(fn: watchFnTypes, options: watchEffectOptions = {}) {
-  return doWatch(fn, extend({}, options, { flush: 'sync' }))
+export function watchSyncEffect(source: watchFnTypes, options: watchEffectOptions = {}) {
+  return doWatch(source, null, extend({}, options, { flush: 'sync' }))
 }
+type vtype = (...arg) => void
+function doWatch(source: any, fn: vtype | null, options: watchEffectOptions) {
+  let oldVal, newVal
 
-function doWatch(fn, options: watchEffectOptions) {
   const job = () => {
-    effect.run()
+    if (fn) {
+      newVal = effect.run()
+      fn(newVal, oldVal, onCleanup)
+      // 将新的value赋值给oldVal作为旧值
+      oldVal = newVal
+    } else {
+      effect.run()
+    }
   }
 
   let scheduler: (...arg) => void
@@ -50,18 +71,70 @@ function doWatch(fn, options: watchEffectOptions) {
       cb()
     }
   }
-  const getter = () => {
+  let getter
+
+  getter = () => {
     if (cleanup) {
       cleanup()
     }
-    fn(onCleanup)
+    // fn有值说明是watch调用的dowatch
+    if (fn) {
+      if (isRef(source)) {
+        return source.value
+      } else if (isReactive(source)) {
+        const res = traverse(source)
+        return res
+      } else if (isFunction(source)) {
+        return source()
+      }
+    } else {
+      // 否则的话就是watchEffect调用的dowatch
+      source(onCleanup)
+    }
   }
+
   const effect = new EffectDepend(getter, scheduler)
 
-  // 执行一次用户传入的fn  watchEffect是会默认执行一次的
-  effect.run()
+  //当用户没有传入fn的时候，代表用户使用的是watchEffect 执行一次用户传入的source  watchEffect是会默认执行一次的
+  // 当用户传入的时候，说明使用的是watch 它在immediate为false的时候是不需要执行一次的
+  if (fn) {
+    // 这里需要清楚，watch既然不执行，那他下次执行的时候就是依赖发生变化的时候，如果依赖发生变化，用户就需要拿到一个旧值，这个旧值(oldVal)不就是getter函数的返回值(这里需要考虑的情况有点多，我这里进行笼统的概括)
+    // watch的第一个依赖集合(source)可以使多种类型的，比如说ref、reactive、function、甚至是一个Array，区分类型是在getter里面区分好了，我们在这里只需要确定: 我这里执行getter 就能拿到对应类型的返回值
+    oldVal = effect.run()
+  } else {
+    effect.run()
+  }
 
   return () => {
     effect.stop()
   }
+}
+
+export function watch<T>(source: WatchSourceType, fn, WatchSource: watchOptions = {}) {
+  return doWatch(source, fn, WatchSource)
+}
+
+export function traverse(value, seen?) {
+  if (!isObject(value)) {
+    return value
+  }
+  seen = seen || new Set()
+  if (seen.has(value)) {
+    return value
+  }
+  seen.add(value)
+  if (isRef(value)) {
+    traverse(value, seen)
+  } else if (isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      traverse(value[i], seen)
+    }
+  } else if (Object.prototype.toString.call(value)) {
+    for (const key in value) {
+      traverse(value[key], seen)
+    }
+    // TODO  map  set object
+  }
+
+  return value
 }

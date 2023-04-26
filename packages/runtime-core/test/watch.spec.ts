@@ -1,4 +1,4 @@
-import { watchEffect, watchPostEffect, watchSyncEffect } from '../src/apiWatch'
+import { watch, watchEffect, watchPostEffect, watchSyncEffect } from '../src/apiWatch'
 import { reactive, ref } from '@coderwei-mini-vue3/reactive'
 import { nextTick } from '@coderwei-mini-vue3/runtime-core'
 import { count } from 'console'
@@ -101,7 +101,7 @@ describe('apiWatch', () => {
       count.value++
     })
 
-    it.only('options flush is sync', () => {
+    it('options flush is sync', () => {
       // 当flush的值为sync的时候，依赖发生变化后立刻执行回调函数
       let obj = reactive({
         count: 1
@@ -117,7 +117,7 @@ describe('apiWatch', () => {
       )
       obj.count++
     })
-    it.only('watchSyncEffect', () => {
+    it('watchSyncEffect', () => {
       let obj = reactive({
         count: 1
       })
@@ -131,6 +131,99 @@ describe('apiWatch', () => {
         }
       )
       obj.count++
+    })
+  })
+
+  describe('watch', () => {
+    it('watch happy path', async () => {
+      let count = ref(1)
+      watch(count, (value, oldVal) => {
+        console.log('watch is run', value, oldVal)
+        // 这里取巧了: 这里的count.value和count.value-1只是为了确定断言的内容，因为触发了两次依赖，每次断言的值是不同的 但是我们确定新值就是count.value的值 我们的操作时++ 所以旧值就是原有基础上-1
+        expect(value).toBe(count.value)
+        expect(oldVal).toBe(count.value - 1)
+        count.value
+      })
+      count.value++
+      await nextTick()
+      count.value++
+    })
+
+    it('watch is called several times in a row', () => {
+      let count = ref(1)
+      watch(count, (value, oldVal) => {
+        console.log('watch is run', value, oldVal)
+        // 连续更改两次依赖，在任务队列中做了去重处理，只执行最后一次 拿到最终值(不处理也问题不大，不影响核心逻辑，这里只是为了更加契合官方watch的表现)
+        expect(value).toBe(3)
+        expect(oldVal).toBe(1)
+        count.value
+      })
+      count.value++
+      count.value++
+    })
+
+    it('watch onCleanup', async () => {
+      let count = ref(1)
+      let fn = vi.fn(() => {
+        console.log('onCleanup is be call')
+      })
+      watch(count, (value, oldVal, onCleanup) => {
+        console.log('watch is be call')
+        onCleanup(() => {
+          console.log('onCleanup is be call')
+        })
+      })
+
+      count.value++
+      await nextTick
+      console.log('视图渲染完毕')
+      count.value++
+      await nextTick
+      console.log('视图渲染完毕')
+      count.value++
+    })
+
+    describe('source type', () => {
+      // watch第一个参数的监听源 会有多种类型的参数  不同的参数有着不同的处理方式
+      it('ref type', () => {
+        // 上面实现watch核心逻辑的时候就是以ref类型为基础的 所以是已经实现的  这里可以跳过
+      })
+
+      it('reactive type', async () => {
+        // 根据官网的说法 当给watch的第一个监听源传递的是一个reactive类型的时候 应该会自动开启深度监听 也就是deep:true
+        let obj = reactive({
+          age: 18,
+          foo: {
+            count: 99
+          }
+        })
+
+        // 注意点: 这里的newVal和oldVal是同一个对象 下面是官网的解释 https://cn.vuejs.org/guide/essentials/watchers.html#deep-watchers
+        /**
+         * 当使用 getter 函数作为源时，回调只在此函数的返回值变化时才会触发。如果你想让回调在深层级变更时也能触发，
+         * 你需要使用 { deep: true } 强制侦听器进入深层级模式。**在深层级模式时，如果回调函数由于深层级的变更而被触发，那么新值和旧值将是同一个对象**
+         */
+        watch(obj, (newVal, oldVal) => {
+          console.log('watch is be call', newVal.foo.count, oldVal.foo.count)
+          expect(newVal).toBe(oldVal)
+        })
+        obj.foo.count++
+      })
+
+      it('function type', () => {
+        let count = ref(1)
+        let obj = reactive({
+          age: 19
+        })
+        watch(
+          // () => count.value,
+          () => obj.age,
+          (newVal, oldVal) => {
+            console.log('watch is be call', newVal, oldVal)
+          }
+        )
+        obj.age++
+      })
     })
   })
 })

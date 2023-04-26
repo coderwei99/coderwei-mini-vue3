@@ -1,7 +1,3 @@
-function toDisplayString(val) {
-    return String(val);
-}
-
 // 判断是否为一个对象
 function isObject(value) {
     return typeof value !== null && typeof value === 'object';
@@ -42,6 +38,10 @@ const toHandlerKey = (eventName) => {
 const isOn = (key) => /^on[A-Z]/.test(key);
 // 空对象
 const EMPTY_OBJECT = {};
+
+function toDisplayString(val) {
+    return String(val);
+}
 
 const Fragment = Symbol('Fragment');
 const Text = Symbol('Text');
@@ -660,6 +660,7 @@ const queue = [];
 let activePreFlushCbs = [];
 let activePostFlushCbs = [];
 let showExecte = false;
+let isFlushing = false;
 function nextTick(fn) {
     return fn ? Promise.resolve().then(fn) : Promise.resolve();
 }
@@ -678,6 +679,7 @@ function queueFlush() {
 }
 function flushJobs() {
     showExecte = false;
+    isFlushing = false;
     /** 增加个判断条件，因为目前为止，我们视图的异步渲染和watchEffect的异步执行 都是走到这个位置，而在这里watchEffect的第二个参数的flush是pre的时候，需要在视图更新之前执行
         所以我们可以先在这里执行我们收集起来的需要在视图更新之前执行的函数
     */
@@ -710,6 +712,9 @@ function queuePosstFlushCb(fn) {
     queueFns(fn, activePostFlushCbs);
 }
 function queueFns(fn, activePreFlushCbs) {
+    if (isFlushing)
+        return;
+    isFlushing = true;
     activePreFlushCbs.push(fn);
     queueFlush();
 }
@@ -1182,23 +1187,37 @@ function getSequence(arr) {
     return result;
 }
 
-function watchEffect(fn, options = {}) {
-    return doWatch(fn, options);
+function watchEffect(source, options = {}) {
+    return doWatch(source, null, options);
 }
-function doWatch(fn, options) {
+function doWatch(source, fn, options) {
+    let oldVal, newVal;
     const job = () => {
-        effect.run();
-    };
-    const scheduler = () => {
-        if (options.flush === 'post') {
-            queuePosstFlushCb(job);
+        if (fn) {
+            newVal = effect.run();
+            fn(newVal, oldVal, onCleanup);
+            // 将新的value赋值给oldVal作为旧值
+            oldVal = newVal;
         }
-        else if (options.flush === 'sync') ;
         else {
-            // pre需要放在最后，因为用户不传和主动传递pre都是走这里
-            queuePreFlushCb(job);
+            effect.run();
         }
     };
+    let scheduler;
+    if (options.flush === 'post') {
+        scheduler = scheduler = () => {
+            queuePosstFlushCb(job);
+        };
+    }
+    else if (options.flush === 'sync') {
+        scheduler = job;
+    }
+    else {
+        // pre需要放在最后，因为用户不传和主动传递pre都是走这里
+        scheduler = () => {
+            queuePreFlushCb(job);
+        };
+    }
     let cleanup;
     // 这个clearup函数就是用户调用的onCleanup,用户在调用这个函数的时候会传递一个函数，用于做用户属于自己的操作，他会在每次watchEffect执行的时候先执行一次(不包括第一次,第一次是默认执行的)
     const onCleanup = (cb) => {
@@ -1207,18 +1226,71 @@ function doWatch(fn, options) {
             cb();
         };
     };
-    const getter = () => {
+    let getter;
+    getter = () => {
         if (cleanup) {
             cleanup();
         }
-        fn(onCleanup);
+        // fn有值说明是watch调用的dowatch
+        if (fn) {
+            if (isRef(source)) {
+                return source.value;
+            }
+            else if (isReactive(source)) {
+                const res = traverse(source);
+                return res;
+            }
+            else if (isFunction(source)) {
+                return source();
+            }
+        }
+        else {
+            // 否则的话就是watchEffect调用的dowatch
+            source(onCleanup);
+        }
     };
     const effect = new EffectDepend(getter, scheduler);
-    // 执行一次用户传入的fn  watchEffect是会默认执行一次的
-    effect.run();
+    //当用户没有传入fn的时候，代表用户使用的是watchEffect 执行一次用户传入的source  watchEffect是会默认执行一次的
+    // 当用户传入的时候，说明使用的是watch 它在immediate为false的时候是不需要执行一次的
+    if (fn) {
+        // 这里需要清楚，watch既然不执行，那他下次执行的时候就是依赖发生变化的时候，如果依赖发生变化，用户就需要拿到一个旧值，这个旧值(oldVal)不就是getter函数的返回值(这里需要考虑的情况有点多，我这里进行笼统的概括)
+        // watch的第一个依赖集合(source)可以使多种类型的，比如说ref、reactive、function、甚至是一个Array，区分类型是在getter里面区分好了，我们在这里只需要确定: 我这里执行getter 就能拿到对应类型的返回值
+        oldVal = effect.run();
+    }
+    else {
+        effect.run();
+    }
     return () => {
         effect.stop();
     };
+}
+function watch(source, fn, WatchSource = {}) {
+    return doWatch(source, fn, WatchSource);
+}
+function traverse(value, seen) {
+    if (!isObject(value)) {
+        return value;
+    }
+    seen = seen || new Set();
+    if (seen.has(value)) {
+        return value;
+    }
+    seen.add(value);
+    if (isRef(value)) {
+        traverse(value, seen);
+    }
+    else if (isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+            traverse(value[i], seen);
+        }
+    }
+    else if (Object.prototype.toString.call(value)) {
+        for (const key in value) {
+            traverse(value[key], seen);
+        }
+        // TODO  map  set object
+    }
+    return value;
 }
 
 // 定义关于浏览器的渲染器
@@ -1310,6 +1382,7 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     __proto__: null,
     createApp: createApp,
     watchEffect: watchEffect,
+    watch: watch,
     toDisplayString: toDisplayString,
     initSlots: initSlots,
     renderSlot: renderSlot,
@@ -1781,5 +1854,5 @@ function compilerToFunction(template) {
 }
 createCompiler(compilerToFunction);
 
-export { EffectDepend, Fragment, ReactiveFlags, Text, cleanupEffect, computed, convert, createApp, createAppAPI, createCompiler, createComponentInstance, createVNode as createElementBlock, createGetter, createRenderer, createSetter, createTextVNode, createVNode, currentInstance, effect, emit, getCurrentInstance, getShapeFlag, h, initProps, initSlots, inject, isProxy, isReactive, isReadonly, isRef, isShallow, isTracking, mutableHandlers, nextTick, normalizeChildren, provide, proxyRefs, publicInstanceProxyHandlers, queueJobs, queuePosstFlushCb, queuePreFlushCb, reactive, readonly, readonlyHandlers, ref, remove$1 as remove, renderSlot, setCurrentInstance, setupComponent, shallowReactive, shallowReactiveHandlers, shallowReadonly, shallowReadonlyHandlers, stop, tarckEffect, toDisplayString, toRaw, track, trackRefValue, trigger, triggerEffect, unref, watchEffect };
+export { EffectDepend, Fragment, ReactiveFlags, Text, cleanupEffect, computed, convert, createApp, createAppAPI, createCompiler, createComponentInstance, createVNode as createElementBlock, createGetter, createRenderer, createSetter, createTextVNode, createVNode, currentInstance, effect, emit, getCurrentInstance, getShapeFlag, h, initProps, initSlots, inject, isProxy, isReactive, isReadonly, isRef, isShallow, isTracking, mutableHandlers, nextTick, normalizeChildren, provide, proxyRefs, publicInstanceProxyHandlers, queueJobs, queuePosstFlushCb, queuePreFlushCb, reactive, readonly, readonlyHandlers, ref, remove$1 as remove, renderSlot, setCurrentInstance, setupComponent, shallowReactive, shallowReactiveHandlers, shallowReadonly, shallowReadonlyHandlers, stop, tarckEffect, toDisplayString, toRaw, track, trackRefValue, trigger, triggerEffect, unref, watch, watchEffect };
 //# sourceMappingURL=vue3.esm.js.map
