@@ -225,5 +225,24 @@ describe('apiWatch', () => {
         obj.age++
       })
     })
+
+    describe('watch options', () => {
+      it.only('immediate', () => {
+        // todo watch的immediate & deep 两个配置
+        let count = ref(1)
+        watch(
+          count,
+          (newVal, oldVal, onCleanup) => {
+            console.log('watch is be call', newVal, oldVal)
+            onCleanup(() => {
+              console.log('oncleanup is be call')
+            })
+          },
+          { immediate: true }
+        )
+
+        count.value++
+      })
+    })
   })
 })

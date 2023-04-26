@@ -36,7 +36,7 @@ export function watchSyncEffect(source: watchFnTypes, options: watchEffectOption
   return doWatch(source, null, extend({}, options, { flush: 'sync' }))
 }
 type vtype = (...arg) => void
-function doWatch(source: any, fn: vtype | null, options: watchEffectOptions) {
+function doWatch(source: any, fn: vtype | null, options: watchOptions) {
   let oldVal, newVal
 
   const job = () => {
@@ -100,7 +100,11 @@ function doWatch(source: any, fn: vtype | null, options: watchEffectOptions) {
   if (fn) {
     // 这里需要清楚，watch既然不执行，那他下次执行的时候就是依赖发生变化的时候，如果依赖发生变化，用户就需要拿到一个旧值，这个旧值(oldVal)不就是getter函数的返回值(这里需要考虑的情况有点多，我这里进行笼统的概括)
     // watch的第一个依赖集合(source)可以使多种类型的，比如说ref、reactive、function、甚至是一个Array，区分类型是在getter里面区分好了，我们在这里只需要确定: 我这里执行getter 就能拿到对应类型的返回值
-    oldVal = effect.run()
+    if (options.immediate) {
+      job()
+    } else {
+      oldVal = effect.run()
+    }
   } else {
     effect.run()
   }
