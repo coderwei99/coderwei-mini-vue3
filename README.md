@@ -51,7 +51,9 @@ runtime-core 部分
 - [x] 实现组件更新功能
 - [x] nextTick 的实现 (vue3 视图更新是异步的，如果我们想在组件更新的时候拿到当前组件的实例或者是操作当前组件的某些数据、dom，正常情况下是拿不到的，因为我们写在 script 标签内的代码都是同步的，那个时候视图还没有更新，拿到的自然都是旧数据)
 - [ ] 实现 watch 功能
-- [ ] 实现 watchEffect 功能
+- [x] 实现 watchEffect 功能
+- [x] 实现 watchPostEffect 功能
+- [x] 实现 watchSyncEffect 功能
 
 
 compiler-core 部分
