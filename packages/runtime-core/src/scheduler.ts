@@ -1,5 +1,6 @@
 const queue: any[] = []
 let activePreFlushCbs: any[] = []
+let activePostFlushCbs: any[] = []
 let showExecte = false
 
 export function nextTick(fn?: () => void) {
@@ -31,22 +32,34 @@ function flushJobs() {
   // for (let i = 0; i < activePreFlushCbs.length; i++) {
   //   activePreFlushCbs[i]()
   // }
-  let o
-  while ((o = activePreFlushCbs.shift())) {
-    o && o()
+  let preflush
+  while ((preflush = activePreFlushCbs.shift())) {
+    preflush && preflush()
   }
 
   // 下面是处理视图的更新的 vue有个核心概念: 视图的异步渲染
   let job
   console.log('view is update')
-
   while ((job = queue.shift())) {
     job && job()
+  }
+
+  // 当watchEffect的options.flush为post的时候  需要在视图更新之后执行
+  flushPostFlushCbs()
+}
+
+function flushPostFlushCbs() {
+  let postflush
+  while ((postflush = activePostFlushCbs.shift())) {
+    postflush && postflush()
   }
 }
 
 export function queuePreFlushCb(fn) {
   queueFns(fn, activePreFlushCbs)
+}
+export function queuePosstFlushCb(fn) {
+  queueFns(fn, activePostFlushCbs)
 }
 
 function queueFns(fn: any, activePreFlushCbs: any[]) {

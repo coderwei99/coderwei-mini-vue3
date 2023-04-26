@@ -72,4 +72,20 @@ describe('apiWatch', () => {
     await nextTick()
     expect(fn).toBeCalledTimes(2)
   })
+
+  it.only('watchEffect options', () => {
+    // 当flush的值为post的时候，回调函数会在组件更新之后执行
+    let count = ref(1)
+    watchEffect(
+      () => {
+        count.value
+        console.log('watchEffect callback is run')
+      },
+      {
+        flush: 'post'
+      }
+    )
+    console.log('开始触发依赖')
+    count.value++
+  })
 })

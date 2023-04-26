@@ -1,5 +1,5 @@
 import { EffectDepend } from '@coderwei-mini-vue3/reactive'
-import { queuePreFlushCb } from './scheduler'
+import { queuePosstFlushCb, queuePreFlushCb } from './scheduler'
 
 export interface watchEffectOptions {
   flush?: 'pre' | 'post' | 'sync'
@@ -17,21 +17,23 @@ function doWatch(fn, options: watchEffectOptions) {
   }
 
   const scheduler = () => {
-    queuePreFlushCb(job)
+    if (options.flush === 'post') {
+      queuePosstFlushCb(job)
+    } else if (options.flush === 'sync') {
+    } else {
+      // pre需要放在最后，因为用户不传和主动传递pre都是走这里
+      queuePreFlushCb(job)
+    }
   }
   let cleanup
   // 这个clearup函数就是用户调用的onCleanup,用户在调用这个函数的时候会传递一个函数，用于做用户属于自己的操作，他会在每次watchEffect执行的时候先执行一次(不包括第一次,第一次是默认执行的)
   const onCleanup = (cb) => {
     cleanup = () => {
       console.log('Calls the function passed in by the user')
-
       cb()
     }
   }
   const getter = () => {
-    console.log(
-      '----------------------------------------------------------------------------------------------------------------------'
-    )
     if (cleanup) {
       cleanup()
     }
