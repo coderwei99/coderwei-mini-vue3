@@ -3,6 +3,8 @@ import { isReactive, reactive } from './reactive'
 import type { Dep } from './effect'
 import { hasChanged, isObject } from '@coderwei-mini-vue3/shared'
 
+export type Ref<T> = RefImpl<T>
+
 class RefImpl<T> {
   private _value: T
   private _rawValue: T
