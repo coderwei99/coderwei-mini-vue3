@@ -1,6 +1,7 @@
-import { watchEffect } from '../src/apiWatch'
-import { ref } from '@coderwei-mini-vue3/reactive'
+import { watchEffect, watchPostEffect, watchSyncEffect } from '../src/apiWatch'
+import { reactive, ref } from '@coderwei-mini-vue3/reactive'
 import { nextTick } from '@coderwei-mini-vue3/runtime-core'
+import { count } from 'console'
 
 describe('apiWatch', () => {
   it('watchEffect', async () => {
@@ -73,19 +74,63 @@ describe('apiWatch', () => {
     expect(fn).toBeCalledTimes(2)
   })
 
-  it.only('watchEffect options', () => {
-    // 当flush的值为post的时候，回调函数会在组件更新之后执行
-    let count = ref(1)
-    watchEffect(
-      () => {
+  describe('watchEffect options', () => {
+    it('options flush is post', () => {
+      // 当flush的值为post的时候，回调函数会在组件更新之后执行
+      let count = ref(1)
+      watchEffect(
+        () => {
+          count.value
+          console.log('watchEffect callback is run')
+        },
+        {
+          flush: 'post'
+        }
+      )
+      console.log('开始触发依赖')
+      count.value++
+    })
+    it('watchPostEffect', () => {
+      // 当flush的值为post的时候，回调函数会在组件更新之后执行
+      let count = ref(1)
+      watchPostEffect(() => {
         count.value
         console.log('watchEffect callback is run')
-      },
-      {
-        flush: 'post'
-      }
-    )
-    console.log('开始触发依赖')
-    count.value++
+      })
+      console.log('开始触发依赖')
+      count.value++
+    })
+
+    it.only('options flush is sync', () => {
+      // 当flush的值为sync的时候，依赖发生变化后立刻执行回调函数
+      let obj = reactive({
+        count: 1
+      })
+      watchEffect(
+        () => {
+          obj.count
+          console.log('watchEffect callback is call')
+        },
+        {
+          flush: 'sync'
+        }
+      )
+      obj.count++
+    })
+    it.only('watchSyncEffect', () => {
+      let obj = reactive({
+        count: 1
+      })
+      watchSyncEffect(
+        () => {
+          obj.count
+          console.log('watchEffect callback is call')
+        },
+        {
+          flush: 'sync'
+        }
+      )
+      obj.count++
+    })
   })
 })

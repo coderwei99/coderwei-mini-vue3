@@ -1,4 +1,5 @@
 import { EffectDepend } from '@coderwei-mini-vue3/reactive'
+import { extend } from '@coderwei-mini-vue3/shared'
 import { queuePosstFlushCb, queuePreFlushCb } from './scheduler'
 
 export interface watchEffectOptions {
@@ -7,8 +8,20 @@ export interface watchEffectOptions {
   onTrigger?: (event) => void
 }
 
-export function watchEffect(fn: (onCleanup?) => void, options: watchEffectOptions = {}) {
+export type watchFnTypes = (onCleanup?) => void
+
+export function watchEffect(fn: watchFnTypes, options: watchEffectOptions = {}) {
   return doWatch(fn, options)
+}
+
+// watchPostEffect就是watchEffect的options传递了post
+export function watchPostEffect(fn: watchFnTypes, options: watchEffectOptions = {}) {
+  return doWatch(fn, extend({}, options, { flush: 'post' }))
+}
+
+// watchSyncEffect就是watchEffect的options传递了sync
+export function watchSyncEffect(fn: watchFnTypes, options: watchEffectOptions = {}) {
+  return doWatch(fn, extend({}, options, { flush: 'sync' }))
 }
 
 function doWatch(fn, options: watchEffectOptions) {
@@ -16,12 +29,16 @@ function doWatch(fn, options: watchEffectOptions) {
     effect.run()
   }
 
-  const scheduler = () => {
-    if (options.flush === 'post') {
+  let scheduler: (...arg) => void
+  if (options.flush === 'post') {
+    scheduler = scheduler = () => {
       queuePosstFlushCb(job)
-    } else if (options.flush === 'sync') {
-    } else {
-      // pre需要放在最后，因为用户不传和主动传递pre都是走这里
+    }
+  } else if (options.flush === 'sync') {
+    scheduler = job
+  } else {
+    // pre需要放在最后，因为用户不传和主动传递pre都是走这里
+    scheduler = () => {
       queuePreFlushCb(job)
     }
   }
