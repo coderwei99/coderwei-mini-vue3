@@ -60,6 +60,7 @@ runtime-core 部分
 - [ ] 实现 KeepAlive 组件
 - [ ] 实现 Teleport 组件
 - [ ] 实现 Suspense 组件
+- [ ] 实现 vue3的生命周期 暂缺(onBeforeUnmount,onUnmounted两个的实现)
 
 runtime-dom
 - [x] 实现浏览器端的渲染逻辑(插入节点、删除节点、更新节点等等)
@@ -80,3 +81,4 @@ monorepo
 > 先走完整个流程，这里记录调试过程中发现的小 bug，走完整个流程在处理这些 bug，顺便迫使自己重新梳理整个流程
 
 - [x] 目前处理子组件 children 的逻辑有问题，当子组件的 children 为字符串的时候，渲染会出错
+- [ ] 组件的切换无法正常切换，初步估计是前面的代码不兼容组件销毁的操作
