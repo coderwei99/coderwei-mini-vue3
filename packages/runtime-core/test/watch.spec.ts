@@ -266,7 +266,7 @@ describe('apiWatch', () => {
         expect(dummy.count).toBe(2)
       })
 
-      it.only('flush', () => {
+      it('flush', () => {
         // 当flush的值为post的时候，回调函数会在组件更新之后执行
         let count = ref(1)
         watch(
