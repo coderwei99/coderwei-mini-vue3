@@ -83,6 +83,7 @@ function doWatch(source: any, fn: vtype | null, options: watchOptions) {
         return source.value
       } else if (isReactive(source)) {
         const res = traverse(source)
+        options.deep = true //当传递一个reactive的时候默认开启深度模式
         return res
       } else if (isFunction(source)) {
         return source()
@@ -91,6 +92,11 @@ function doWatch(source: any, fn: vtype | null, options: watchOptions) {
       // 否则的话就是watchEffect调用的dowatch
       source(onCleanup)
     }
+  }
+
+  if (options.deep && fn) {
+    const baseGetter = getter
+    getter = () => traverse(baseGetter())
   }
 
   const effect = new EffectDepend(getter, scheduler)
@@ -118,6 +124,7 @@ export function watch<T>(source: WatchSourceType, fn, WatchSource: watchOptions 
   return doWatch(source, fn, WatchSource)
 }
 
+// 递归访问注册依赖
 export function traverse(value, seen?) {
   if (!isObject(value)) {
     return value

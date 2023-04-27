@@ -227,7 +227,7 @@ describe('apiWatch', () => {
     })
 
     describe('watch options', () => {
-      it.only('immediate', () => {
+      it('immediate', () => {
         // todo watch的immediate & deep 两个配置
         let count = ref(1)
         watch(
@@ -240,7 +240,46 @@ describe('apiWatch', () => {
           },
           { immediate: true }
         )
+        count.value++
+      })
 
+      it('deep', () => {
+        // let info = reactive({
+        //   count: 1
+        // })
+        let info = ref({
+          count: 1
+        })
+        let dummy
+        watch(
+          info,
+          (newVal) => {
+            console.log('watch is be call')
+            dummy = newVal
+          },
+          {
+            immediate: true
+            // deep: true
+          }
+        )
+        info.value.count++
+        expect(dummy.count).toBe(2)
+      })
+
+      it.only('flush', () => {
+        // 当flush的值为post的时候，回调函数会在组件更新之后执行
+        let count = ref(1)
+        watch(
+          count,
+          () => {
+            count.value
+            console.log('watchEffect callback is run')
+          },
+          {
+            flush: 'post'
+          }
+        )
+        console.log('开始触发依赖')
         count.value++
       })
     })
