@@ -14,6 +14,7 @@ export * from './h'
 export * from './renderer'
 export * from './vnode'
 export * from './scheduler'
+export * from './lifecycle'
 export { watchEffect, watch } from './apiWatch'
 export * from '@coderwei-mini-vue3/reactive'
 

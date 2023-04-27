@@ -1,5 +1,12 @@
 import { effect } from '@coderwei-mini-vue3/reactive'
-import { EMPTY_OBJECT, isFunction, isObject, isOn, isString } from '@coderwei-mini-vue3/shared'
+import {
+  EMPTY_OBJECT,
+  invokeArrayFns,
+  isFunction,
+  isObject,
+  isOn,
+  isString
+} from '@coderwei-mini-vue3/shared'
 import { ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { createComponentInstance, setupComponent } from './component'
 import { shouldUpdateComponent } from './componentUpdateUtils'
@@ -130,6 +137,8 @@ export function createRenderer(options?) {
         console.log('array to array diff')
         patchKeyedChildren(prevChildren, newChildren, container, parentComponent)
       }
+    } else {
+      console.log('----------------------------------------------------')
     }
   }
 
@@ -392,14 +401,21 @@ export function createRenderer(options?) {
           // console.log("sub", instance.render);
           // console.log("sub", instance.render());
           // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
-
+          const { m, bm } = instance
+          // 执行onBeforeMount生命周期钩子
+          if (bm) {
+            invokeArrayFns(bm)
+          }
           const subTree = instance.render.call(instance.proxy, instance.proxy)
           instance.subTree = subTree
           // 对子树进行patch操作
           patch(null, subTree, container, instance)
           // console.log(subTree);
           instance.isMouted = true //将isMouted设置为true  代表已挂载 后续执行更新操作
-
+          // 执行onMounted生命周期钩子
+          if (m) {
+            invokeArrayFns(m)
+          }
           initialvnode.el = subTree.el
         } else {
           // TODO  update 逻辑
@@ -407,9 +423,11 @@ export function createRenderer(options?) {
           // 这里处理更新的逻辑
 
           // 处理组件
-          const { next, vnode } = instance
-          console.log(vnode, '---')
-          console.log(next, 'next---')
+          const { next, vnode, u, bu } = instance
+          // 执行onBeforeUpdate生命周期钩子
+          if (bu) {
+            invokeArrayFns(bu)
+          }
           if (next) {
             next.el = vnode.el
             updateComponentPreRender(instance, next)
@@ -425,6 +443,10 @@ export function createRenderer(options?) {
           patch(prevSubTree, subTree, container, instance)
           // console.log("prevSubTree", prevSubTree);
           // console.log("subTree", subTree);
+          // 执行onUpdated生命周期钩子
+          if (u) {
+            invokeArrayFns(u)
+          }
         }
       },
       {
@@ -439,7 +461,7 @@ export function createRenderer(options?) {
   // 卸载children
   function unmountChildren(children: any) {
     // console.log("children", children.length);
-
+    debugger
     for (let i = 0; i < children.length; i++) {
       hotRemove(children[i].el)
     }
@@ -450,10 +472,13 @@ export function createRenderer(options?) {
   }
 }
 
+function unmount() {}
+
 // 更新组件
 function updateComponentPreRender(instance: any, nextVnode: any) {
   console.log(instance, 'instance')
   console.log(nextVnode, 'nextVnode')
+  nextVnode.component = instance
   instance.vnode = nextVnode
   instance.next = null
   instance.props = nextVnode.props

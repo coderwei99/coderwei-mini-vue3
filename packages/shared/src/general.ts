@@ -52,3 +52,10 @@ export const EMPTY_OBJECT = {}
 
 // 对象上面的拷贝方法
 export const extend = Object.assign
+
+// 循环执行数组中的方法
+export const invokeArrayFns = (fns, ...arg) => {
+  for (let i = 0; i < fns.length; i++) {
+    fns[i](...arg)
+  }
+}
