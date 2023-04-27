@@ -54,7 +54,17 @@ runtime-core 部分
 - [x] 实现 watchEffect 功能
 - [x] 实现 watchPostEffect 功能
 - [x] 实现 watchSyncEffect 功能
+- [ ] 实现 defineComponent 功能
+- [ ] 实现 defineAsyncComponent 功能
+- [ ] 实现 defineCustomElement 功能
+- [ ] 实现 KeepAlive 组件
+- [ ] 实现 Teleport 组件
+- [ ] 实现 Suspense 组件
 
+runtime-dom
+- [x] 实现浏览器端的渲染逻辑(插入节点、删除节点、更新节点等等)
+- [ ] 实现 Transition 组件
+- [ ] 实现 TransitionGroup 组件
 
 compiler-core 部分
 - [x] 实现 parse 模块
@@ -64,6 +74,7 @@ compiler-core 部分
 
 monorepo
 - [x] 使用monorepo重构整个项目
+- [x] 使用vitest进行TDD测试
 
 ## 遗留 bug
 > 先走完整个流程，这里记录调试过程中发现的小 bug，走完整个流程在处理这些 bug，顺便迫使自己重新梳理整个流程
