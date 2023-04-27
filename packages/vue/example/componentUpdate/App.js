@@ -1,7 +1,9 @@
 // 在 render 中使用 proxy 调用 emit 函数
 // 也可以直接使用 this
 // 验证 proxy 的实现逻辑
-import { h, ref } from '../../lib/vue3.esm.js'
+import { h, ref,onBeforeMount,onMounted,
+  onUpdated,
+  onBeforeUpdate, } from '../../lib/vue3.esm.js'
 
 import Child from "./Child.js";
 
@@ -19,6 +21,18 @@ export default {
     const changeCount = () => {
       count.value++
     }
+    onMounted(() => {
+      console.log('挂载完成');
+    })
+    onUpdated(() => {
+      console.log('更新完成');
+    })
+    onBeforeMount(() =>{
+      console.log('挂载前');
+    })
+    onBeforeUpdate(() => {
+      console.log('更新前');
+    })
 
     return {
       msg,

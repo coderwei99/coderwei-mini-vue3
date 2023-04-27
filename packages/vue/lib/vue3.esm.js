@@ -38,6 +38,12 @@ const toHandlerKey = (eventName) => {
 const isOn = (key) => /^on[A-Z]/.test(key);
 // 空对象
 const EMPTY_OBJECT = {};
+// 循环执行数组中的方法
+const invokeArrayFns = (fns, ...arg) => {
+    for (let i = 0; i < fns.length; i++) {
+        fns[i](...arg);
+    }
+};
 
 function toDisplayString(val) {
     return String(val);
@@ -268,7 +274,7 @@ function track(target, key) {
  */
 function trigger(target, key) {
     const depsMap = targetMap.get(target);
-    const dep = depsMap.get(key); //这里用可选运算符  因为没办法保证depsMap一定有对象
+    const dep = depsMap === null || depsMap === void 0 ? void 0 : depsMap.get(key); //这里用可选运算符  因为没办法保证depsMap一定有对象
     if (dep) {
         triggerEffect(dep);
     }
@@ -530,7 +536,18 @@ function createComponentInstance(vnode, parentComponent) {
         isMouted: false,
         subTree: {},
         setupState: {},
-        next: null
+        next: null,
+        // 生命周期
+        bc: null,
+        c: null,
+        bm: null,
+        m: null,
+        bu: null,
+        u: null,
+        um: null,
+        bum: null,
+        da: null,
+        a: null
     };
     // console.log("vnode", instance);
     // console.log("emit", emit);
@@ -643,17 +660,6 @@ function createAppAPI(render) {
 
 function h(type, props, children) {
     return createVNode(type, props, children);
-}
-
-function shouldUpdateComponent(n1, n2) {
-    const { props: preProps } = n1;
-    const { props: nextProps } = n2;
-    for (const key in nextProps) {
-        if (preProps[key] != nextProps[key]) {
-            return true;
-        }
-    }
-    return false;
 }
 
 const queue = [];
@@ -797,6 +803,15 @@ function createRenderer(options) {
         let prevChildren = n1.children;
         let newChildren = n2.children;
         if (newShapeFlag & 8 /* ShapeFlags.TEXT_CHILDREN */) {
+            console.log(333);
+        }
+        else {
+            if (prevShapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) ;
+            else {
+                console.log('----------------');
+            }
+        }
+        if (newShapeFlag & 8 /* ShapeFlags.TEXT_CHILDREN */) {
             // 新节点是文本节点的情况
             if (prevShapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) {
                 // 旧节点是数组的情况   走到这里说明是 array === string的更新
@@ -829,6 +844,9 @@ function createRenderer(options) {
                 console.log('array to array diff');
                 patchKeyedChildren(prevChildren, newChildren, container, parentComponent);
             }
+        }
+        else {
+            console.log('----------------------------------------------------');
         }
     }
     function patchKeyedChildren(c1, c2, container, parentComponent) {
@@ -1053,14 +1071,13 @@ function createRenderer(options) {
          * 判断页面内的组件是否需要更新
          * 考虑一下 我们这里的更新逻辑是处理子组件的 当前组件的数据发生变化的时候 我们需要调用这个update方法吗？ 明显不需要
          */
-        if (shouldUpdateComponent(n1, n2)) {
-            instance.next = n2;
-            instance.update();
-        }
-        else {
-            n2.el = n1.el;
-            instance.el = n2;
-        }
+        // if (shouldUpdateComponent(n1, n2)) {
+        instance.next = n2;
+        instance.update();
+        // } else {
+        //   n2.el = n1.el
+        //   instance.el = n2
+        // }
     }
     function setupRenderEffect(instance, initialvnode, container) {
         // 通过effect进行包裹 会自动收集依赖 帮助我们在用户使用的变量发生变化时更新视图
@@ -1071,12 +1088,21 @@ function createRenderer(options) {
                 // console.log("sub", instance.render);
                 // console.log("sub", instance.render());
                 // 这里我们通过call 对render函数进行一个this绑定  因为我们会在h函数中使用this.xxx来声明的变量
+                const { m, bm } = instance;
+                // 执行onBeforeMount生命周期钩子
+                if (bm) {
+                    invokeArrayFns(bm);
+                }
                 const subTree = instance.render.call(instance.proxy, instance.proxy);
                 instance.subTree = subTree;
                 // 对子树进行patch操作
                 patch(null, subTree, container, instance);
                 // console.log(subTree);
                 instance.isMouted = true; //将isMouted设置为true  代表已挂载 后续执行更新操作
+                // 执行onMounted生命周期钩子
+                if (m) {
+                    invokeArrayFns(m);
+                }
                 initialvnode.el = subTree.el;
             }
             else {
@@ -1084,9 +1110,11 @@ function createRenderer(options) {
                 console.log('更新视图');
                 // 这里处理更新的逻辑
                 // 处理组件
-                const { next, vnode } = instance;
-                console.log(vnode, '---');
-                console.log(next, 'next---');
+                const { next, vnode, u, bu } = instance;
+                // 执行onBeforeUpdate生命周期钩子
+                if (bu) {
+                    invokeArrayFns(bu);
+                }
                 if (next) {
                     next.el = vnode.el;
                     updateComponentPreRender(instance, next);
@@ -1101,6 +1129,10 @@ function createRenderer(options) {
                 patch(prevSubTree, subTree, container, instance);
                 // console.log("prevSubTree", prevSubTree);
                 // console.log("subTree", subTree);
+                // 执行onUpdated生命周期钩子
+                if (u) {
+                    invokeArrayFns(u);
+                }
             }
         }, {
             scheduler() {
@@ -1112,6 +1144,7 @@ function createRenderer(options) {
     // 卸载children
     function unmountChildren(children) {
         // console.log("children", children.length);
+        debugger;
         for (let i = 0; i < children.length; i++) {
             hotRemove(children[i].el);
         }
@@ -1125,6 +1158,7 @@ function createRenderer(options) {
 function updateComponentPreRender(instance, nextVnode) {
     console.log(instance, 'instance');
     console.log(nextVnode, 'nextVnode');
+    nextVnode.component = instance;
     instance.vnode = nextVnode;
     instance.next = null;
     instance.props = nextVnode.props;
@@ -1187,6 +1221,41 @@ function getSequence(arr) {
     return result;
 }
 
+// 注入生命周期
+function injectHook(type, hook, target) {
+    if (target) {
+        const hooks = target[type] || (target[type] = []);
+        hooks.push(hook);
+    }
+    else {
+        console.error('生命周期钩子只能在setup函数里面使用');
+    }
+}
+/**
+ * 工厂函数: 我们需要清楚我们是如何使用这几个生命周期的
+ * beforeUpdate(() =>{
+ *  code..
+ * })
+ * 几个生命周期的使用方式是一样的，他是一个函数，接受一个回调函数，会在适当的情况下执行这个回调函数，所以我们就知道createHook这个工厂函数必须返回一个函数
+ *
+ * target是一个可选的,我们试想一下,我们在使用生命周期钩子的时候,并没有传递对应的target,我们可以试想,一个项目中会有多个组件,执行injectHook的时候,他是如何区分他该将这个生命周期注入到那个组件实例呢?
+ * result: 我们需要非常清楚vue的执行逻辑 当代码会走到这里的时候 那就说明一定是在setup函数里面 我们并不允许在其他地方调用生命周期函数(vue3 compostion api的情况下) 所以我们回顾执行setup函数的时候
+ * 是不是在执行之前将当前组件实例赋值给了一个currentInstance变量(./component的setupStateFulComponent函数) 走到这里的时候就说明在执行setup函数 那么这个时候currentInstance变量一定储存着当前组件实例
+ * 我们就可以确定该将生命周期函数注入到哪个组件实例了
+ *  */
+function createHook(type) {
+    return (hook, target = currentInstance) => {
+        injectHook(type, hook, target);
+    };
+}
+// 这里注意点: 用户实际上调用的是createHook返回的函数，而返回的函数我们使用闭包留存了type，也就是这里传递进去标志是哪个生命周期的变量
+const onBeforeMount = createHook("bm" /* LifeCycleHooks.BEFORE_MOUNT */);
+const onMounted = createHook("m" /* LifeCycleHooks.MOUNTED */);
+const onBeforeUpdate = createHook("bu" /* LifeCycleHooks.BEFORE_UPDATE */);
+const onUpdated = createHook("u" /* LifeCycleHooks.UPDATED */);
+const onBeforeUnmount = createHook("bum" /* LifeCycleHooks.BEFORE_UNMOUNT */);
+const onUnmounted = createHook("um" /* LifeCycleHooks.UNMOUNTED */);
+
 function watchEffect(source, options = {}) {
     return doWatch(source, null, options);
 }
@@ -1238,6 +1307,7 @@ function doWatch(source, fn, options) {
             }
             else if (isReactive(source)) {
                 const res = traverse(source);
+                options.deep = true; //当传递一个reactive的时候默认开启深度模式
                 return res;
             }
             else if (isFunction(source)) {
@@ -1249,13 +1319,22 @@ function doWatch(source, fn, options) {
             source(onCleanup);
         }
     };
+    if (options.deep && fn) {
+        const baseGetter = getter;
+        getter = () => traverse(baseGetter());
+    }
     const effect = new EffectDepend(getter, scheduler);
     //当用户没有传入fn的时候，代表用户使用的是watchEffect 执行一次用户传入的source  watchEffect是会默认执行一次的
     // 当用户传入的时候，说明使用的是watch 它在immediate为false的时候是不需要执行一次的
     if (fn) {
         // 这里需要清楚，watch既然不执行，那他下次执行的时候就是依赖发生变化的时候，如果依赖发生变化，用户就需要拿到一个旧值，这个旧值(oldVal)不就是getter函数的返回值(这里需要考虑的情况有点多，我这里进行笼统的概括)
         // watch的第一个依赖集合(source)可以使多种类型的，比如说ref、reactive、function、甚至是一个Array，区分类型是在getter里面区分好了，我们在这里只需要确定: 我这里执行getter 就能拿到对应类型的返回值
-        oldVal = effect.run();
+        if (options.immediate) {
+            job();
+        }
+        else {
+            oldVal = effect.run();
+        }
     }
     else {
         effect.run();
@@ -1267,6 +1346,7 @@ function doWatch(source, fn, options) {
 function watch(source, fn, WatchSource = {}) {
     return doWatch(source, fn, WatchSource);
 }
+// 递归访问注册依赖
 function traverse(value, seen) {
     if (!isObject(value)) {
         return value;
@@ -1412,6 +1492,14 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     queueJobs: queueJobs,
     queuePreFlushCb: queuePreFlushCb,
     queuePosstFlushCb: queuePosstFlushCb,
+    injectHook: injectHook,
+    createHook: createHook,
+    onBeforeMount: onBeforeMount,
+    onMounted: onMounted,
+    onBeforeUpdate: onBeforeUpdate,
+    onUpdated: onUpdated,
+    onBeforeUnmount: onBeforeUnmount,
+    onUnmounted: onUnmounted,
     EffectDepend: EffectDepend,
     cleanupEffect: cleanupEffect,
     effect: effect,
@@ -1854,5 +1942,5 @@ function compilerToFunction(template) {
 }
 createCompiler(compilerToFunction);
 
-export { EffectDepend, Fragment, ReactiveFlags, Text, cleanupEffect, computed, convert, createApp, createAppAPI, createCompiler, createComponentInstance, createVNode as createElementBlock, createGetter, createRenderer, createSetter, createTextVNode, createVNode, currentInstance, effect, emit, getCurrentInstance, getShapeFlag, h, initProps, initSlots, inject, isProxy, isReactive, isReadonly, isRef, isShallow, isTracking, mutableHandlers, nextTick, normalizeChildren, provide, proxyRefs, publicInstanceProxyHandlers, queueJobs, queuePosstFlushCb, queuePreFlushCb, reactive, readonly, readonlyHandlers, ref, remove$1 as remove, renderSlot, setCurrentInstance, setupComponent, shallowReactive, shallowReactiveHandlers, shallowReadonly, shallowReadonlyHandlers, stop, tarckEffect, toDisplayString, toRaw, track, trackRefValue, trigger, triggerEffect, unref, watch, watchEffect };
+export { EffectDepend, Fragment, ReactiveFlags, Text, cleanupEffect, computed, convert, createApp, createAppAPI, createCompiler, createComponentInstance, createVNode as createElementBlock, createGetter, createHook, createRenderer, createSetter, createTextVNode, createVNode, currentInstance, effect, emit, getCurrentInstance, getShapeFlag, h, initProps, initSlots, inject, injectHook, isProxy, isReactive, isReadonly, isRef, isShallow, isTracking, mutableHandlers, nextTick, normalizeChildren, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, provide, proxyRefs, publicInstanceProxyHandlers, queueJobs, queuePosstFlushCb, queuePreFlushCb, reactive, readonly, readonlyHandlers, ref, remove$1 as remove, renderSlot, setCurrentInstance, setupComponent, shallowReactive, shallowReactiveHandlers, shallowReadonly, shallowReadonlyHandlers, stop, tarckEffect, toDisplayString, toRaw, track, trackRefValue, trigger, triggerEffect, unref, watch, watchEffect };
 //# sourceMappingURL=vue3.esm.js.map
