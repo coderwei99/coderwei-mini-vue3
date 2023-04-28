@@ -60,7 +60,7 @@ runtime-core 部分
 - [ ] 实现 KeepAlive 组件
 - [ ] 实现 Teleport 组件
 - [ ] 实现 Suspense 组件
-- [ ] 实现 vue3的生命周期 暂缺(onBeforeUnmount,onUnmounted两个的实现)
+- [x] 实现 vue3的生命周期
 
 runtime-dom
 - [x] 实现浏览器端的渲染逻辑(插入节点、删除节点、更新节点等等)
