@@ -9,6 +9,7 @@ import {
 } from '@coderwei-mini-vue3/shared'
 import { ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { createComponentInstance, setupComponent } from './component'
+import { renderComponentRoot } from './componentRenderUtils'
 import { shouldUpdateComponent } from './componentUpdateUtils'
 import { createAppAPI } from './createApp'
 import { queueJobs } from './scheduler'
@@ -46,6 +47,10 @@ export function createRenderer(options?) {
         mountChildren(n2.children, container, parentComponent)
         break
       default:
+        // if (shapeFlag & ShapeFlags.COMPONENT) {
+        //   debugger
+        //   console.log('patch component')
+        // } else
         if (shapeFlag & ShapeFlags.ELEMENT) {
           // TODO 字符串 普通dom元素的情况
           // console.log("type == string", n2);
@@ -406,7 +411,7 @@ export function createRenderer(options?) {
           if (bm) {
             invokeArrayFns(bm)
           }
-          const subTree = instance.render.call(instance.proxy, instance.proxy)
+          const subTree = renderComponentRoot(instance)
           instance.subTree = subTree
           // 对子树进行patch操作
           patch(null, subTree, container, instance)
@@ -433,13 +438,13 @@ export function createRenderer(options?) {
             updateComponentPreRender(instance, next)
           }
           // 新的vnode
-          const subTree = instance.render.call(instance.proxy, instance.proxy)
+          const subTree = renderComponentRoot(instance)
+
           // 老的vnode
           const prevSubTree = instance.subTree
           // 存储这一次的vnode，下一次更新逻辑作为老的vnode
           instance.subTree = subTree
           // console.log("跟着视图走patch");
-
           patch(prevSubTree, subTree, container, instance)
           // console.log("prevSubTree", prevSubTree);
           // console.log("subTree", subTree);
