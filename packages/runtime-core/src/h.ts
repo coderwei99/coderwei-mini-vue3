@@ -1,4 +1,4 @@
-import { isString } from '@coderwei-mini-vue3/shared'
+import { isArray, isObject, isString } from '@coderwei-mini-vue3/shared'
 import { createVNode } from './vnode'
 
 // h函数有两种写法
@@ -19,11 +19,18 @@ export function h(type, props?, children?) {
   const len = arguments.length
   if (len === 2) {
     // TODO 兼容两个参数的写法
+    if (isObject(props) && !isArray(children)) {
+      // 如果props是一个对象并且不是一个数组  就说明用户传入了一个props
+      return createVNode(type, props)
+    } else {
+      // 如果是数组、文本
+      return createVNode(type, null, children)
+    }
   } else {
     if (len > 3) {
       // 三个以上
       children = Array.prototype.slice.call(arguments, 2)
-    } else if (Array.isArray(children)) {
+    } else if (isArray(children)) {
       // 如果原本就是给的数组 就不需要给他再次放到数组里面了 不然就形成了二维数组
       // TODO 这里其实可以直接在下面的isString 那里进行判断  那里不应该用isString  因为判断当前children 是否有一个__is_vNode类型  不过暂时没有对节点进行标注
     } else if (len === 3 && !isString(children)) {
