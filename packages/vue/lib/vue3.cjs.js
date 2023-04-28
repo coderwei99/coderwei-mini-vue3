@@ -138,9 +138,9 @@ const publicPropertiesMap = {
 const publicInstanceProxyHandlers = {
     get({ _: instance }, key) {
         const { setupState, props } = instance;
-        console.log(instance);
-        console.log('key', key);
-        console.log('setupState', setupState);
+        // console.log(instance)
+        // console.log('key', key)
+        // console.log('setupState', setupState)
         if (hasOwn(setupState, key)) {
             return setupState[key];
         }
@@ -601,7 +601,7 @@ function handleSetupResult(instance, setupResult) {
 }
 function finishComponentSetup(instance) {
     const component = instance.type;
-    console.log('---------------------------------');
+    // console.log('---------------------------------')
     if (compiler && !component.rennder) {
         if (component.template) {
             component.render = compiler(component.template);
@@ -675,13 +675,23 @@ function createAppAPI(render) {
 // h函数的children 只有两种情况  要么把children处理成数组  要么是字符串
 function h(type, props, children) {
     const len = arguments.length;
-    if (len === 2) ;
+    if (len === 2) {
+        // TODO 兼容两个参数的写法
+        if (isObject(props) && !isArray(children)) {
+            // 如果props是一个对象并且不是一个数组  就说明用户传入了一个props
+            return createVNode(type, props);
+        }
+        else {
+            // 如果是数组、文本
+            return createVNode(type, null, children);
+        }
+    }
     else {
         if (len > 3) {
             // 三个以上
             children = Array.prototype.slice.call(arguments, 2);
         }
-        else if (Array.isArray(children)) ;
+        else if (isArray(children)) ;
         else if (len === 3 && !isString(children)) {
             // 等于三个 并且children是节点 才放入数组中 如果不是节点可以直接渲染  在这里就要统一处理好 后续判断只要是节点 就直接去重复patch 就不管新里面有没有可能是文本类型了
             children = [children];
@@ -746,7 +756,7 @@ function flushJobs() {
     }
     // 下面是处理视图的更新的 vue有个核心概念: 视图的异步渲染
     let job;
-    console.log('view is update');
+    // console.log('view is update')
     while ((job = queue.shift())) {
         job && job();
     }
@@ -867,8 +877,8 @@ function createRenderer(options) {
             // 这里兼容了array ==> string 和 string ==> string的情况  如果旧节点是array 会走上面的if条件 对旧节点进行卸载
             // console.log("prechildren", prevChildren);
             // console.log("newChildren", newChildren);
-            console.log('prevChildren', prevChildren);
-            console.log('newChildren', newChildren);
+            // console.log('prevChildren', prevChildren)
+            // console.log('newChildren', newChildren)
             if (prevChildren !== newChildren) {
                 hotSetElementText(container, newChildren);
             }
@@ -884,12 +894,12 @@ function createRenderer(options) {
             }
             else {
                 // array to array diff算法
-                console.log('array to array diff');
+                // console.log('array to array diff')
                 patchKeyedChildren(prevChildren, newChildren, container, parentComponent);
             }
         }
         else {
-            console.log('----------------------------------------------------');
+            console.log('-------------------检查一下判断条件-------------------');
         }
     }
     function patchKeyedChildren(c1, c2, container, parentComponent) {
@@ -929,9 +939,9 @@ function createRenderer(options) {
             e2--;
         }
         // 新的比旧的长  n1:旧节点  n2:新节点
-        console.log(i);
-        console.log(e1);
-        console.log(e2);
+        // console.log(i)
+        // console.log(e1)
+        // console.log(e2)
         /**
          * 旧节点: A  B
          * 新节点: A  B  C
@@ -939,14 +949,14 @@ function createRenderer(options) {
          */
         if (i > e1) {
             if (i <= e2) {
-                console.log('新旧节点');
+                // console.log('新旧节点')
                 const nextPros = e2 + 1;
                 const anchor = e2 + 1 < c2.length ? c2[nextPros].el : null;
                 // console.log("i+1", i + 1);
                 // console.log("c2.length", c2);
                 // console.log("c2.length", { ...c2[nextPros] });
                 // console.log("c2.length", c2[nextPros]);
-                console.log('-----', anchor);
+                // console.log('-----', anchor)
                 while (i <= e2) {
                     patch(null, c2[i], container, parentComponent, anchor);
                     i++;
@@ -954,7 +964,7 @@ function createRenderer(options) {
             }
         }
         else if (i > e2) {
-            console.log('旧节点比新节点长');
+            // console.log('旧节点比新节点长')
             while (i <= e1) {
                 // hotRemove(c1[i].el)
                 unmount(c1[i]);
@@ -963,7 +973,7 @@ function createRenderer(options) {
         }
         else {
             // 中间部分
-            console.log('diff算法中间部分');
+            // console.log('diff算法中间部分')
             let s1 = i;
             let s2 = i;
             let toBePatched = e2 - s2 + 1;
@@ -1038,7 +1048,7 @@ function createRenderer(options) {
                 }
                 else {
                     if (i != incrementNewIndexSequence[j]) {
-                        console.log('移动位置');
+                        // console.log('移动位置')
                         hotInsert(nextChild.el, container, anchor);
                     }
                     else {
@@ -1111,7 +1121,7 @@ function createRenderer(options) {
         }
     }
     function updateComponent(n1, n2) {
-        console.log('更新操作');
+        // console.log('更新操作')
         const instance = (n2.component = n1.component);
         /**
          * 判断页面内的组件是否需要更新
@@ -1154,7 +1164,7 @@ function createRenderer(options) {
             }
             else {
                 // TODO  update 逻辑
-                console.log('更新视图');
+                // console.log('更新视图')
                 // 这里处理更新的逻辑
                 // 处理组件
                 const { next, vnode, u, bu } = instance;
@@ -1198,10 +1208,10 @@ function createRenderer(options) {
     }
     // 卸载函数
     function unmount(vnode, parentComponent) {
-        console.log(vnode);
+        // console.log(vnode)
         const { el, shapeFlag, component } = vnode;
         if (shapeFlag & 6 /* ShapeFlags.COMPONENT */) {
-            console.log(111);
+            // console.log(111)
             if (shapeFlag & 256 /* ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE */) {
                 // TODO 需要缓存的组件 keepalive
                 return;
@@ -1223,8 +1233,8 @@ function createRenderer(options) {
 }
 // 更新组件
 function updateComponentPreRender(instance, nextVnode) {
-    console.log(instance, 'instance');
-    console.log(nextVnode, 'nextVnode');
+    // console.log(instance, 'instance')
+    // console.log(nextVnode, 'nextVnode')
     nextVnode.component = instance;
     instance.vnode = nextVnode;
     instance.next = null;
@@ -1358,7 +1368,7 @@ function doWatch(source, fn, options) {
     // 这个clearup函数就是用户调用的onCleanup,用户在调用这个函数的时候会传递一个函数，用于做用户属于自己的操作，他会在每次watchEffect执行的时候先执行一次(不包括第一次,第一次是默认执行的)
     const onCleanup = (cb) => {
         cleanup = () => {
-            console.log('Calls the function passed in by the user');
+            // console.log('Calls the function passed in by the user')
             cb();
         };
     };

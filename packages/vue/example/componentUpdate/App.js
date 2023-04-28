@@ -1,9 +1,16 @@
 // 在 render 中使用 proxy 调用 emit 函数
 // 也可以直接使用 this
 // 验证 proxy 的实现逻辑
-import { h, ref,onBeforeMount,onMounted,
+import {
+  h,
+  ref,
+  onBeforeMount,
+  onMounted,
   onUpdated,
-  onBeforeUpdate, } from '../../lib/vue3.esm.js'
+  onBeforeUnmount,
+  onUnmounted,
+  onBeforeUpdate,
+} from '../../lib/vue3.esm.js'
 
 import Child from "./Child.js";
 
@@ -22,16 +29,22 @@ export default {
       count.value++
     }
     onMounted(() => {
-      console.log('挂载完成');
+      console.log('app onMounted is call ');
     })
     onUpdated(() => {
-      console.log('更新完成');
+      console.log('app onUpdated is call ');
     })
-    onBeforeMount(() =>{
-      console.log('挂载前');
+    onBeforeMount(() => {
+      console.log('app onBeforeMount is call ');
     })
     onBeforeUpdate(() => {
-      console.log('更新前');
+      console.log('app onBeforeUpdate is call ');
+    })
+    onBeforeUnmount(() => {
+      console.log('app onBeforeUnmount is call ');
+    })
+    onUnmounted(() => {
+      console.log('app onUnmounted is call ');
     })
 
     return {
@@ -43,7 +56,7 @@ export default {
   },
 
   render() {
-    return h("div", {}, [
+    const res = h("div", {}, [
       h("div", {}, "你好"),
       h(
         "button",
@@ -58,5 +71,6 @@ export default {
       h('p', {}, `count:${this.count}`),
       h('button', { onClick: this.changeCount }, `addBtn`)
     ]);
+    return res
   },
 };
