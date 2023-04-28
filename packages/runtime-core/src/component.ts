@@ -44,12 +44,14 @@ export function createComponentInstance(vnode: any, parentComponent: any) {
     um: null,
     bum: null,
     da: null,
-    a: null
+    a: null,
+    ctx: {}
   }
   // console.log("vnode", instance);
   // console.log("emit", emit);
   // emit初始化
   instance.emit = emit.bind(null, instance) as any
+  instance.ctx = { _: instance }
   // console.log(instance);
 
   return instance
@@ -76,7 +78,7 @@ export function setupComponent(instance: any) {
 function setupStateFulComponent(instance: any) {
   // type是我们创建实例的时候自己手动加上的  -->createComponentInstance函数
   const Component = instance.type
-  instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandlers)
+  instance.proxy = new Proxy(instance.ctx, publicInstanceProxyHandlers)
   // console.log("instance", instance);
 
   const { setup } = Component
