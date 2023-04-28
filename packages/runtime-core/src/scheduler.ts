@@ -41,7 +41,7 @@ function flushJobs() {
 
   // 下面是处理视图的更新的 vue有个核心概念: 视图的异步渲染
   let job
-  console.log('view is update')
+  // console.log('view is update')
   while ((job = queue.shift())) {
     job && job()
   }

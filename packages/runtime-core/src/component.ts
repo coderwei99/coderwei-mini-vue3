@@ -108,7 +108,7 @@ function handleSetupResult(instance: any, setupResult: any) {
 
 function finishComponentSetup(instance: any) {
   const component = instance.type
-  console.log('---------------------------------')
+  // console.log('---------------------------------')
   if (compiler && !component.rennder) {
     if (component.template) {
       component.render = compiler(component.template)

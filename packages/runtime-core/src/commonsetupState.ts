@@ -10,10 +10,10 @@ const publicPropertiesMap: PublicPropertiesMap = {
 export const publicInstanceProxyHandlers: ProxyHandler<any> = {
   get({ _: instance }, key: string) {
     const { setupState, props } = instance
-    console.log(instance)
+    // console.log(instance)
 
-    console.log('key', key)
-    console.log('setupState', setupState)
+    // console.log('key', key)
+    // console.log('setupState', setupState)
 
     if (hasOwn(setupState, key)) {
       return setupState[key]

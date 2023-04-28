@@ -122,8 +122,8 @@ export function createRenderer(options?) {
       // 这里兼容了array ==> string 和 string ==> string的情况  如果旧节点是array 会走上面的if条件 对旧节点进行卸载
       // console.log("prechildren", prevChildren);
       // console.log("newChildren", newChildren);
-      console.log('prevChildren', prevChildren)
-      console.log('newChildren', newChildren)
+      // console.log('prevChildren', prevChildren)
+      // console.log('newChildren', newChildren)
 
       if (prevChildren !== newChildren) {
         hotSetElementText(container, newChildren)
@@ -139,11 +139,11 @@ export function createRenderer(options?) {
         mountChildren(newChildren, container, parentComponent)
       } else {
         // array to array diff算法
-        console.log('array to array diff')
+        // console.log('array to array diff')
         patchKeyedChildren(prevChildren, newChildren, container, parentComponent)
       }
     } else {
-      console.log('----------------------------------------------------')
+      console.log('-------------------检查一下判断条件-------------------')
     }
   }
 
@@ -186,9 +186,9 @@ export function createRenderer(options?) {
     }
 
     // 新的比旧的长  n1:旧节点  n2:新节点
-    console.log(i)
-    console.log(e1)
-    console.log(e2)
+    // console.log(i)
+    // console.log(e1)
+    // console.log(e2)
 
     /**
      * 旧节点: A  B
@@ -197,7 +197,7 @@ export function createRenderer(options?) {
      */
     if (i > e1) {
       if (i <= e2) {
-        console.log('新旧节点')
+        // console.log('新旧节点')
         const nextPros = e2 + 1
         const anchor = e2 + 1 < c2.length ? c2[nextPros].el : null
         // console.log("i+1", i + 1);
@@ -205,14 +205,14 @@ export function createRenderer(options?) {
         // console.log("c2.length", { ...c2[nextPros] });
         // console.log("c2.length", c2[nextPros]);
 
-        console.log('-----', anchor)
+        // console.log('-----', anchor)
         while (i <= e2) {
           patch(null, c2[i], container, parentComponent, anchor)
           i++
         }
       }
     } else if (i > e2) {
-      console.log('旧节点比新节点长')
+      // console.log('旧节点比新节点长')
       while (i <= e1) {
         // hotRemove(c1[i].el)
         unmount(c1[i], parentComponent)
@@ -220,7 +220,7 @@ export function createRenderer(options?) {
       }
     } else {
       // 中间部分
-      console.log('diff算法中间部分')
+      // console.log('diff算法中间部分')
       let s1 = i
       let s2 = i
       let toBePatched = e2 - s2 + 1
@@ -301,7 +301,7 @@ export function createRenderer(options?) {
           patch(null, nextChild, container, parentComponent, anchor)
         } else {
           if (i != incrementNewIndexSequence[j]) {
-            console.log('移动位置')
+            // console.log('移动位置')
             hotInsert(nextChild.el, container, anchor)
           } else {
             j--
@@ -382,7 +382,7 @@ export function createRenderer(options?) {
   }
 
   function updateComponent(n1: any, n2: any) {
-    console.log('更新操作')
+    // console.log('更新操作')
     const instance = (n2.component = n1.component)
 
     /**
@@ -427,7 +427,7 @@ export function createRenderer(options?) {
           initialvnode.el = subTree.el
         } else {
           // TODO  update 逻辑
-          console.log('更新视图')
+          // console.log('更新视图')
           // 这里处理更新的逻辑
 
           // 处理组件
@@ -477,11 +477,11 @@ export function createRenderer(options?) {
 
   // 卸载函数
   function unmount(vnode, parentComponent) {
-    console.log(vnode)
+    // console.log(vnode)
     const { el, shapeFlag, component } = vnode
 
     if (shapeFlag & ShapeFlags.COMPONENT) {
-      console.log(111)
+      // console.log(111)
       if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
         // TODO 需要缓存的组件 keepalive
         return
@@ -505,8 +505,8 @@ export function createRenderer(options?) {
 
 // 更新组件
 function updateComponentPreRender(instance: any, nextVnode: any) {
-  console.log(instance, 'instance')
-  console.log(nextVnode, 'nextVnode')
+  // console.log(instance, 'instance')
+  // console.log(nextVnode, 'nextVnode')
   nextVnode.component = instance
   instance.vnode = nextVnode
   instance.next = null

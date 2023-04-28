@@ -67,7 +67,7 @@ function doWatch(source: any, fn: vtype | null, options: watchOptions) {
   // 这个clearup函数就是用户调用的onCleanup,用户在调用这个函数的时候会传递一个函数，用于做用户属于自己的操作，他会在每次watchEffect执行的时候先执行一次(不包括第一次,第一次是默认执行的)
   const onCleanup = (cb) => {
     cleanup = () => {
-      console.log('Calls the function passed in by the user')
+      // console.log('Calls the function passed in by the user')
       cb()
     }
   }
