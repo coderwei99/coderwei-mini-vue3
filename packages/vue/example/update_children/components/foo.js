@@ -1,10 +1,26 @@
-import { h, ref } from '../../../lib/vue3.esm.js'
+import { h, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref } from '../../../lib/vue3.esm.js'
 
 export default {
   name: 'foo',
   setup() {
-    console.log('foo 的setup执行');
-
+    onMounted(() =>{
+      console.log('onMounted is call ');
+    })
+    onUpdated(() =>{
+      console.log('onUpdated is call ');
+    })
+    onBeforeMount(() =>{
+      console.log('onBeforeMount is call ');
+    })
+    onBeforeUpdate(() =>{
+      console.log('onBeforeUpdate is call ');
+    })
+    onBeforeUnmount(() =>{
+      console.log('onBeforeUnmount is call ');
+    })
+    onUnmounted(() =>{
+      console.log('onUnmounted is call ');
+    })
     return {
     }
   },

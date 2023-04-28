@@ -658,8 +658,52 @@ function createAppAPI(render) {
     };
 }
 
+// h函数有两种写法
+// 1. 两个参数
+// 写法1 h('div',{})
+// 写法2 h('div',h('span'))
+// 写法3 h('div','he')
+// 写法4 h('div',['he'])
+// 3.三个参数
+// 写法1 h('div',{},'孩子')
+// 写法1 h('div',{},h())
+// 写法2 h('div',{},['孩子','孩子'，'孩子'])
+// h函数的children 只有两种情况  要么把children处理成数组  要么是字符串
 function h(type, props, children) {
-    return createVNode(type, props, children);
+    const len = arguments.length;
+    if (len === 2) ;
+    else {
+        if (len > 3) {
+            // 三个以上
+            children = Array.prototype.slice.call(arguments, 2);
+        }
+        else if (Array.isArray(children)) ;
+        else if (len === 3 && !isString(children)) {
+            // 等于三个 并且children是节点 才放入数组中 如果不是节点可以直接渲染  在这里就要统一处理好 后续判断只要是节点 就直接去重复patch 就不管新里面有没有可能是文本类型了
+            children = [children];
+        }
+        return createVNode(type, props, children);
+    }
+}
+
+function renderComponentRoot(instance) {
+    let result;
+    if (instance.vnode.shapeFlag & 4 /* ShapeFlags.STATEFUL_COMPONENT */) {
+        // 有状态的组件
+        result = instance.render.call(instance.proxy, instance.proxy);
+    }
+    return result;
+}
+
+function shouldUpdateComponent(n1, n2) {
+    const { props: preProps } = n1;
+    const { props: nextProps } = n2;
+    for (const key in nextProps) {
+        if (preProps[key] != nextProps[key]) {
+            return true;
+        }
+    }
+    return false;
 }
 
 const queue = [];
@@ -747,6 +791,10 @@ function createRenderer(options) {
                 mountChildren(n2.children, container, parentComponent);
                 break;
             default:
+                // if (shapeFlag & ShapeFlags.COMPONENT) {
+                //   debugger
+                //   console.log('patch component')
+                // } else
                 if (shapeFlag & 1 /* ShapeFlags.ELEMENT */) {
                     // TODO 字符串 普通dom元素的情况
                     // console.log("type == string", n2);
@@ -802,15 +850,6 @@ function createRenderer(options) {
         // 拿到新旧节点的children
         let prevChildren = n1.children;
         let newChildren = n2.children;
-        if (newShapeFlag & 8 /* ShapeFlags.TEXT_CHILDREN */) {
-            console.log(333);
-        }
-        else {
-            if (prevShapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) ;
-            else {
-                console.log('----------------');
-            }
-        }
         if (newShapeFlag & 8 /* ShapeFlags.TEXT_CHILDREN */) {
             // 新节点是文本节点的情况
             if (prevShapeFlag & 16 /* ShapeFlags.ARRAY_CHILDREN */) {
@@ -913,7 +952,8 @@ function createRenderer(options) {
         else if (i > e2) {
             console.log('旧节点比新节点长');
             while (i <= e1) {
-                hotRemove(c1[i].el);
+                // hotRemove(c1[i].el)
+                unmount(c1[i]);
                 i++;
             }
         }
@@ -952,7 +992,8 @@ function createRenderer(options) {
                  * 当指针走到旧节点的e的时候  新节点中间的两个节点已经全都在旧节点中出现过并且patch过了 那么后面的d百分之百是做删除操作的 也就是不会存在于新节点
                  */
                 if (patched >= toBePatched) {
-                    hotRemove(prevChildren.el);
+                    // hotRemove(prevChildren.el)
+                    unmount(prevChildren);
                 }
                 // 这里包含两种情况  null == null || null == undefined
                 if (prevChildren.key != null) {
@@ -962,7 +1003,7 @@ function createRenderer(options) {
                 else {
                     // 说明用户的旧节点没有key  这个时候就只能for循环挨个遍历了
                     for (let j = s2; j <= e2; j++) {
-                        if (isSomeVNodeType(e2[j], prevChildren)) {
+                        if (isSomeVNodeType(c2[j], prevChildren)) {
                             // 如果新节点和旧节点的type 和key 相同  就说明找到了 然后这一层循环就没必要了
                             newIndex = j;
                             break;
@@ -971,7 +1012,8 @@ function createRenderer(options) {
                 }
                 if (newIndex === undefined) {
                     // 就说明没有找到   需要卸载操作
-                    hotRemove(prevChildren.el);
+                    unmount(prevChildren);
+                    // hotRemove(prevChildren.el)
                 }
                 else {
                     newIndexToOldIndexMap[newIndex - s2] = i + 1;
@@ -1071,13 +1113,14 @@ function createRenderer(options) {
          * 判断页面内的组件是否需要更新
          * 考虑一下 我们这里的更新逻辑是处理子组件的 当前组件的数据发生变化的时候 我们需要调用这个update方法吗？ 明显不需要
          */
-        // if (shouldUpdateComponent(n1, n2)) {
-        instance.next = n2;
-        instance.update();
-        // } else {
-        //   n2.el = n1.el
-        //   instance.el = n2
-        // }
+        if (shouldUpdateComponent(n1, n2)) {
+            instance.next = n2;
+            instance.update();
+        }
+        else {
+            n2.el = n1.el;
+            instance.el = n2;
+        }
     }
     function setupRenderEffect(instance, initialvnode, container) {
         // 通过effect进行包裹 会自动收集依赖 帮助我们在用户使用的变量发生变化时更新视图
@@ -1093,7 +1136,7 @@ function createRenderer(options) {
                 if (bm) {
                     invokeArrayFns(bm);
                 }
-                const subTree = instance.render.call(instance.proxy, instance.proxy);
+                const subTree = renderComponentRoot(instance);
                 instance.subTree = subTree;
                 // 对子树进行patch操作
                 patch(null, subTree, container, instance);
@@ -1120,7 +1163,7 @@ function createRenderer(options) {
                     updateComponentPreRender(instance, next);
                 }
                 // 新的vnode
-                const subTree = instance.render.call(instance.proxy, instance.proxy);
+                const subTree = renderComponentRoot(instance);
                 // 老的vnode
                 const prevSubTree = instance.subTree;
                 // 存储这一次的vnode，下一次更新逻辑作为老的vnode
@@ -1142,12 +1185,32 @@ function createRenderer(options) {
         });
     }
     // 卸载children
-    function unmountChildren(children) {
+    function unmountChildren(children, parentComponent) {
         // console.log("children", children.length);
-        debugger;
         for (let i = 0; i < children.length; i++) {
-            hotRemove(children[i].el);
+            // hotRemove(children[i].el)
+            unmount(children[i]);
         }
+    }
+    // 卸载函数
+    function unmount(vnode, parentComponent) {
+        console.log(vnode);
+        const { el, shapeFlag, component } = vnode;
+        if (shapeFlag & 6 /* ShapeFlags.COMPONENT */) {
+            console.log(111);
+            if (shapeFlag & 256 /* ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE */) {
+                // TODO 需要缓存的组件 keepalive
+                return;
+            }
+            const { um, bum, subTree } = component;
+            bum && invokeArrayFns(bum);
+            unmount(subTree);
+            um && invokeArrayFns(um);
+            return;
+        }
+        // 卸载
+        const performRemove = () => hotRemove(el);
+        performRemove();
     }
     return {
         render,
@@ -1375,7 +1438,7 @@ function traverse(value, seen) {
 
 // 定义关于浏览器的渲染器
 function createElement(type) {
-    console.log('create el 操作', type);
+    // console.log('create el 操作', type)
     const element = document.createElement(type);
     return element;
 }
@@ -1383,19 +1446,19 @@ function createText(text) {
     return document.createTextNode(text);
 }
 function setText(node, text) {
-    console.log('调用到这里了', node, text);
+    // console.log('调用到这里了', node, text)
     node.nodeValue = text;
 }
 function setElementText(el, text) {
-    console.log('SetElementText', el, text);
+    // console.log('SetElementText', el, text)
     el.textContent = text;
 }
 function patchProp(el, key, preValue, nextValue) {
     // preValue 之前的值
     // 为了之后 update 做准备的值
     // nextValue 当前的值
-    console.log(`PatchProp 设置属性:${key} 值:${nextValue}`);
-    console.log(`key: ${key} 之前的值是:${preValue}`);
+    // console.log(`PatchProp 设置属性:${key} 值:${nextValue}`)
+    // console.log(`key: ${key} 之前的值是:${preValue}`)
     if (isOn(key)) {
         // 添加事件处理函数的时候需要注意一下
         // 1. 添加的和删除的必须是一个函数，不然的话 删除不掉
@@ -1431,7 +1494,7 @@ function patchProp(el, key, preValue, nextValue) {
     }
 }
 function insert(child, parent, anchor = null) {
-    console.log('Insert操作');
+    // console.log('Insert操作')
     parent.insertBefore(child, anchor);
 }
 function remove(child) {
