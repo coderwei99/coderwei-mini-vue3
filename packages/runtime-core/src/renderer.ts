@@ -267,7 +267,7 @@ export function createRenderer(options?) {
         } else {
           // 说明用户的旧节点没有key  这个时候就只能for循环挨个遍历了
           for (let j = s2; j <= e2; j++) {
-            if (isSomeVNodeType(e2[j], prevChildren)) {
+            if (isSomeVNodeType(c2[j], prevChildren)) {
               // 如果新节点和旧节点的type 和key 相同  就说明找到了 然后这一层循环就没必要了
               newIndex = j
               break
