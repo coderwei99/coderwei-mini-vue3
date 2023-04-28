@@ -116,7 +116,7 @@ export function createRenderer(options?) {
         // console.log("array === string");
         // 1. 卸载节点
         // console.log(container, "container");
-        unmountChildren(container)
+        unmountChildren(container, parentComponent)
       }
       // 2. 设置children  children是一个string 直接设置即可 挂载节点  注意新节点是文本节点 所以需要使用的的是setText函数
       // 这里兼容了array ==> string 和 string ==> string的情况  如果旧节点是array 会走上面的if条件 对旧节点进行卸载
@@ -214,7 +214,8 @@ export function createRenderer(options?) {
     } else if (i > e2) {
       console.log('旧节点比新节点长')
       while (i <= e1) {
-        hotRemove(c1[i].el)
+        // hotRemove(c1[i].el)
+        unmount(c1[i], parentComponent)
         i++
       }
     } else {
@@ -257,7 +258,8 @@ export function createRenderer(options?) {
          * 当指针走到旧节点的e的时候  新节点中间的两个节点已经全都在旧节点中出现过并且patch过了 那么后面的d百分之百是做删除操作的 也就是不会存在于新节点
          */
         if (patched >= toBePatched) {
-          hotRemove(prevChildren.el)
+          // hotRemove(prevChildren.el)
+          unmount(prevChildren, parentComponent)
         }
 
         // 这里包含两种情况  null == null || null == undefined
@@ -277,7 +279,8 @@ export function createRenderer(options?) {
 
         if (newIndex === undefined) {
           // 就说明没有找到   需要卸载操作
-          hotRemove(prevChildren.el)
+          unmount(prevChildren, parentComponent)
+          // hotRemove(prevChildren.el)
         } else {
           newIndexToOldIndexMap[newIndex - s2] = i + 1
 
@@ -464,20 +467,41 @@ export function createRenderer(options?) {
   }
 
   // 卸载children
-  function unmountChildren(children: any) {
+  function unmountChildren(children: any, parentComponent) {
     // console.log("children", children.length);
-    debugger
     for (let i = 0; i < children.length; i++) {
-      hotRemove(children[i].el)
+      // hotRemove(children[i].el)
+      unmount(children[i], parentComponent)
     }
+  }
+
+  // 卸载函数
+  function unmount(vnode, parentComponent) {
+    console.log(vnode)
+    const { el, shapeFlag, component } = vnode
+
+    if (shapeFlag & ShapeFlags.COMPONENT) {
+      console.log(111)
+      if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+        // TODO 需要缓存的组件 keepalive
+        return
+      }
+      const { um, bum, subTree } = component
+      bum && invokeArrayFns(bum)
+      unmount(subTree, parentComponent)
+      um && invokeArrayFns(um)
+      return
+    }
+
+    // 卸载
+    const performRemove = () => hotRemove(el)
+    performRemove()
   }
   return {
     render,
     createApp: createAppAPI(render)
   }
 }
-
-function unmount() {}
 
 // 更新组件
 function updateComponentPreRender(instance: any, nextVnode: any) {
