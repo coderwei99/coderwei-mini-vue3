@@ -1,6 +1,5 @@
 import { isArray, isObject, isString } from '@coderwei-mini-vue3/shared'
-import { createVNode } from './vnode'
-
+import { createVNode, isVnode } from './vnode'
 // h函数有两种写法
 // 1. 两个参数
 // 写法1 h('div',{})
@@ -30,10 +29,7 @@ export function h(type, props?, children?) {
     if (len > 3) {
       // 三个以上
       children = Array.prototype.slice.call(arguments, 2)
-    } else if (isArray(children)) {
-      // 如果原本就是给的数组 就不需要给他再次放到数组里面了 不然就形成了二维数组
-      // TODO 这里其实可以直接在下面的isString 那里进行判断  那里不应该用isString  因为判断当前children 是否有一个__is_vNode类型  不过暂时没有对节点进行标注
-    } else if (len === 3 && !isString(children)) {
+    } else if (len === 3 && isVnode(children)) {
       // 等于三个 并且children是节点 才放入数组中 如果不是节点可以直接渲染  在这里就要统一处理好 后续判断只要是节点 就直接去重复patch 就不管新里面有没有可能是文本类型了
       children = [children]
     }

@@ -12,7 +12,8 @@ export function createVNode(type, props?, children?) {
     component: null,
     key: props && props.key,
     shapeFlag: getShapeFlag(type), //  给vnode提供一个标识符 标志是什么类型的vnode  便于扩展
-    el: null
+    el: null,
+    __v_isVNode: true
   }
   // 根据vnode的children类型追加一个新的标识符
   normalizeChildren(vnode, children)
@@ -44,4 +45,9 @@ export function normalizeChildren(vnode: any, children: any) {
 // 当用户传入文本的时候 需要创建一个虚拟节点 不然patch无法渲染的
 export function createTextVNode(text: string) {
   return createVNode(Text, {}, text)
+}
+
+// 判断是否是一个虚拟节点
+export function isVnode(value) {
+  return value && !!value.__v_isVNode
 }
