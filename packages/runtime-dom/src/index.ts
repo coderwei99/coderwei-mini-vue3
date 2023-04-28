@@ -3,7 +3,7 @@ import { isOn } from '@coderwei-mini-vue3/shared'
 import { createRenderer } from '@coderwei-mini-vue3/runtime-core'
 
 function createElement(type) {
-  console.log('create el 操作', type)
+  // console.log('create el 操作', type)
   const element = document.createElement(type)
   return element
 }
@@ -13,13 +13,13 @@ function createText(text) {
 }
 
 function setText(node: HTMLElement, text) {
-  console.log('调用到这里了', node, text)
+  // console.log('调用到这里了', node, text)
 
   node.nodeValue = text
 }
 
 function setElementText(el, text) {
-  console.log('SetElementText', el, text)
+  // console.log('SetElementText', el, text)
   el.textContent = text
 }
 
@@ -27,8 +27,8 @@ function patchProp(el, key, preValue, nextValue) {
   // preValue 之前的值
   // 为了之后 update 做准备的值
   // nextValue 当前的值
-  console.log(`PatchProp 设置属性:${key} 值:${nextValue}`)
-  console.log(`key: ${key} 之前的值是:${preValue}`)
+  // console.log(`PatchProp 设置属性:${key} 值:${nextValue}`)
+  // console.log(`key: ${key} 之前的值是:${preValue}`)
 
   if (isOn(key)) {
     // 添加事件处理函数的时候需要注意一下
@@ -62,7 +62,7 @@ function patchProp(el, key, preValue, nextValue) {
 }
 
 function insert(child, parent, anchor = null) {
-  console.log('Insert操作')
+  // console.log('Insert操作')
   parent.insertBefore(child, anchor)
 }
 
