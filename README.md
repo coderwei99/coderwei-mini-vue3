@@ -54,7 +54,7 @@ runtime-core 部分
 - [x] 实现 watchEffect 功能
 - [x] 实现 watchPostEffect 功能
 - [x] 实现 watchSyncEffect 功能
-- [ ] 实现 defineComponent 功能
+- [x] 实现 defineComponent 功能
 - [ ] 实现 defineAsyncComponent 功能
 - [ ] 实现 defineCustomElement 功能
 - [ ] 实现 KeepAlive 组件
