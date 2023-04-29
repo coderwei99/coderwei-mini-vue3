@@ -6,8 +6,19 @@ export function initSlots(instance: any, children: any) {
   const { vnode } = instance
   if (vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
     normalizeObjectSlots(instance.slots, children)
+  } else {
+    instance.slots = {}
+    if (children) {
+      normalizeVNodeSlots(instance, children)
+    }
   }
 }
+
+function normalizeVNodeSlots(instance, children) {
+  const normalize = normalizeSlotValue(children)
+  instance.slots.default = () => normalize
+}
+
 // 具名name作为instance.slots的属性名，属性值是vnode
 function normalizeObjectSlots(slots: any, children: any) {
   // console.log("slots children===>", children);
@@ -38,5 +49,15 @@ export function renderSlot(slots: any, name: string = 'default', props: any) {
     }
   } else {
     return slots
+  }
+}
+
+// update slots
+export function updateSlots(instance, children) {
+  const { vnode, slots } = instance
+  if (vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+    normalizeObjectSlots(children, slots)
+  } else if (children) {
+    normalizeVNodeSlots(instance, children)
   }
 }

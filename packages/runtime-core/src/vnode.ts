@@ -32,14 +32,17 @@ export function normalizeChildren(vnode: any, children: any) {
   } else if (Array.isArray(children)) {
     // children是数组的情况下
     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.ARRAY_CHILDREN
+  } else if (isObject(children)) {
+    // 子级是对象
+    vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.SLOTS_CHILDREN
   }
 
-  if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-    if (isObject(children)) {
-      // 子级是对象
-      vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.SLOTS_CHILDREN
-    }
-  }
+  // if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+  //   if (isObject(children)) {
+  //     // 子级是对象
+  //     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.SLOTS_CHILDREN
+  //   }
+  // }
 }
 
 // 当用户传入文本的时候 需要创建一个虚拟节点 不然patch无法渲染的

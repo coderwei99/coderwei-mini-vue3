@@ -74,6 +74,16 @@ export function setupComponent(instance: any) {
   setupStateFulComponent(instance)
 }
 
+// 创建setup上下文
+export function createSetupContext(instance) {
+  return {
+    attrs: instance.attrs,
+    slots: instance.slots,
+    emit: instance.emit,
+    expose: (exposed) => (instance.exposed = exposed || {})
+  }
+}
+
 // 初始化组件状态函数
 function setupStateFulComponent(instance: any) {
   // type是我们创建实例的时候自己手动加上的  -->createComponentInstance函数
@@ -88,9 +98,8 @@ function setupStateFulComponent(instance: any) {
   if (setup) {
     // console.log("instance emit", instance.emit);
     setCurrentInstance(instance)
-    const setupResult = setup(shallowReadonly(instance.props), {
-      emit: instance.emit
-    })
+    const instanceContext = createSetupContext(instance)
+    const setupResult = setup(shallowReadonly(instance.props), instanceContext)
 
     // 这里考虑两种情况，一种是setup返回的是一个对象，那么可以将这个对象注入template上下文渲染，另一种是setup返回的是一个h函数，需要走render函数
     handleSetupResult(instance, setupResult)
@@ -103,6 +112,8 @@ function setupStateFulComponent(instance: any) {
 function handleSetupResult(instance: any, setupResult: any) {
   if (isFunction(setupResult)) {
     // TODO setup返回值是h函数的情况
+    if (instance.render) console.warn('setup返回一个函数,忽略render函数')
+    instance.render = setupResult
   } else if (isObject(setupResult)) {
     instance.setupState = proxyRefs(setupResult)
   }
@@ -111,13 +122,14 @@ function handleSetupResult(instance: any, setupResult: any) {
 function finishComponentSetup(instance: any) {
   const component = instance.type
   // console.log('---------------------------------')
-  if (compiler && !component.rennder) {
-    if (component.template) {
-      component.render = compiler(component.template)
+  if (!instance.render) {
+    if (compiler && !component.rennder) {
+      if (component.template) {
+        component.render = compiler(component.template)
+      }
     }
+    instance.render = component.render
   }
-
-  instance.render = component.render
 }
 
 // provide 函数的实现

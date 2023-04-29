@@ -1,4 +1,5 @@
 import { effect } from '@coderwei-mini-vue3/reactive'
+import { isKeepAlive, updateSlots } from '@coderwei-mini-vue3/runtime-dom'
 import {
   EMPTY_OBJECT,
   invokeArrayFns,
@@ -36,7 +37,10 @@ export function createRenderer(options?) {
 
   // patch方法 第一次用来处理挂载 第二次用来处理更新  由n1进行判断
   function patch(n1: any, n2: any, container: any, parentComponent: any, anchor: any = null) {
-    // console.log(n1, n2);
+    if (n1 && !isSomeVNodeType(n1, n2)) {
+      unmount(n1, parentComponent)
+      n1 = null
+    } // console.log(n1, n2);
     // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
     const { shapeFlag, type } = n2
     switch (type) {
@@ -147,6 +151,10 @@ export function createRenderer(options?) {
     }
   }
 
+  function isSomeVNodeType(n1, n2) {
+    return n1.type == n2.type && n1.key == n2.key
+  }
+
   function patchKeyedChildren(c1: any, c2: any, container: any, parentComponent: any) {
     let i = 0
     let e1 = c1.length - 1
@@ -155,9 +163,6 @@ export function createRenderer(options?) {
     // console.log(e2);
     // console.log("-----");
 
-    function isSomeVNodeType(n1, n2) {
-      return n1.type == n2.type && n1.key == n2.key
-    }
     // 左端算法  从左边开始找 一直找到两个节点不同为止  相同的就继续递归调用patch 检查children是否相同
     while (i <= e1 && i <= e2) {
       const n1 = c1[i]
@@ -365,6 +370,11 @@ export function createRenderer(options?) {
     const instance = (vnode.component = createComponentInstance(vnode, parentComponent))
     // console.log(instance);
 
+    // 判断是否是KeepAlive组件 如果是的话需要注入当前渲染器的方法  在实现KeepAlive需要使用
+    if (isKeepAlive(vnode)) {
+      ;(instance.ctx as any).renderer = internals
+    }
+
     // 安装组件
     setupComponent(instance)
 
@@ -377,7 +387,12 @@ export function createRenderer(options?) {
       // 如果n1有值说明是更新  如果n1 没有值说明是挂载操作
       updateComponent(n1, n2)
     } else {
-      mountComponent(n2, container, parentComponent)
+      if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+        // 如果当前组件是被keepalive缓存过的
+        parentComponent.ctx.activate(n2, container)
+      } else {
+        mountComponent(n2, container, parentComponent)
+      }
     }
   }
 
@@ -391,6 +406,12 @@ export function createRenderer(options?) {
      */
     if (shouldUpdateComponent(n1, n2)) {
       instance.next = n2
+      // TODO update prop
+      // TODO update attrs
+
+      // update slots
+      updateSlots(instance, n2.children)
+
       instance.update()
     } else {
       n2.el = n1.el
@@ -483,7 +504,8 @@ export function createRenderer(options?) {
     if (shapeFlag & ShapeFlags.COMPONENT) {
       // console.log(111)
       if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
-        // TODO 需要缓存的组件 keepalive
+        // 需要缓存的组件 keepalive
+        parentComponent.ctx.deactivate(vnode)
         return
       }
       const { um, bum, subTree } = component
@@ -497,6 +519,29 @@ export function createRenderer(options?) {
     const performRemove = () => hotRemove(el)
     performRemove()
   }
+
+  // 存储一部分方法(这部分方法是渲染器(runtime-dom)传递过来的) 在挂载组件的时候 如果是KeepAlive组件 就需要把这些方法给过去
+  const internals = {
+    p: patch,
+    um: unmount,
+    m: move,
+    r: hotRemove,
+    mt: mountComponent,
+    mc: mountChildren,
+    pc: patchChildren,
+    o: options
+  }
+
+  function move(vnode, container, anchor?, moveType?) {
+    const { el, shapeFlag } = vnode
+    if (shapeFlag & ShapeFlags.COMPONENT) {
+      move(vnode.component.subTree, container, anchor, moveType)
+    }
+    console.log('move', el)
+
+    el && hotInsert(el, container, anchor)
+  }
+
   return {
     render,
     createApp: createAppAPI(render)
