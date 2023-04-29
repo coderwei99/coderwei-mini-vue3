@@ -40,7 +40,8 @@ export function createRenderer(options?) {
     if (n1 && !isSomeVNodeType(n1, n2)) {
       unmount(n1, parentComponent)
       n1 = null
-    } // console.log(n1, n2);
+    }
+    // console.log(n1, n2);
     // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
     const { shapeFlag, type } = n2
     switch (type) {
@@ -536,10 +537,11 @@ export function createRenderer(options?) {
     const { el, shapeFlag } = vnode
     if (shapeFlag & ShapeFlags.COMPONENT) {
       move(vnode.component.subTree, container, anchor, moveType)
+      return
     }
     console.log('move', el)
 
-    el && hotInsert(el, container, anchor)
+    hotInsert(el, container, anchor)
   }
 
   return {
