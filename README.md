@@ -57,7 +57,7 @@ runtime-core 部分
 - [x] 实现 defineComponent 功能
 - [ ] 实现 defineAsyncComponent 功能
 - [ ] 实现 defineCustomElement 功能
-- [ ] 实现 KeepAlive 组件
+- [x] 实现 KeepAlive 组件
 - [ ] 实现 Teleport 组件
 - [ ] 实现 Suspense 组件
 - [x] 实现 vue3的生命周期
