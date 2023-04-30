@@ -82,4 +82,4 @@ monorepo
 
 - [x] 目前处理子组件 children 的逻辑有问题，当子组件的 children 为字符串的时候，渲染会出错
 - [x] 组件的切换无法正常切换，初步估计是前面的代码不兼容组件销毁的操作
-- [ ] h函数children参数传递数字不渲染 (包括使用变量但是变量是一个数字类型) 在进行patchChildren的时候都不成立 patchFlag为1  需要单独处理
+- [x] h函数children参数传递数字不渲染 (包括使用变量但是变量是一个数字类型) 在进行patchChildren的时候都不成立 patchFlag为1  需要单独处理
