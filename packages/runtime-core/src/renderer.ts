@@ -514,7 +514,7 @@ export function createRenderer(options?) {
 
     // 卸载
     const performRemove = () => hotRemove(el)
-    performRemove()
+    el && performRemove()
   }
 
   // 存储一部分方法(这部分方法是渲染器(runtime-dom)传递过来的) 在挂载组件的时候 如果是KeepAlive组件 就需要把这些方法给过去
