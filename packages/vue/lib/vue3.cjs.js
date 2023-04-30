@@ -63,7 +63,8 @@ function createVNode(type, props, children) {
         component: null,
         key: props && props.key,
         shapeFlag: getShapeFlag(type),
-        el: null
+        el: null,
+        __v_isVNode: true
     };
     // 根据vnode的children类型追加一个新的标识符
     normalizeChildren(vnode, children);
@@ -81,16 +82,28 @@ function normalizeChildren(vnode, children) {
         // children是数组的情况下
         vnode.shapeFlag = vnode.shapeFlag | 16 /* ShapeFlags.ARRAY_CHILDREN */;
     }
-    if (vnode.shapeFlag & 4 /* ShapeFlags.STATEFUL_COMPONENT */) {
-        if (isObject(children)) {
-            // 子级是对象
-            vnode.shapeFlag = vnode.shapeFlag | 32 /* ShapeFlags.SLOTS_CHILDREN */;
-        }
+    else if (isObject(children)) {
+        // 子级是对象
+        vnode.shapeFlag = vnode.shapeFlag | 32 /* ShapeFlags.SLOTS_CHILDREN */;
     }
+    // if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+    //   if (isObject(children)) {
+    //     // 子级是对象
+    //     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.SLOTS_CHILDREN
+    //   }
+    // }
 }
 // 当用户传入文本的时候 需要创建一个虚拟节点 不然patch无法渲染的
 function createTextVNode(text) {
     return createVNode(Text, {}, text);
+}
+// 判断是否是一个虚拟节点
+function isVnode(value) {
+    return value && !!value.__v_isVNode;
+}
+// diff算法判断是否是同一个节点
+function isSomeVNodeType(n1, n2) {
+    return n1.type == n2.type && n1.key == n2.key;
 }
 
 // 如果children里面有slot，那么把slot挂载到instance上
@@ -99,6 +112,16 @@ function initSlots(instance, children) {
     if (vnode.shapeFlag & 32 /* ShapeFlags.SLOTS_CHILDREN */) {
         normalizeObjectSlots(instance.slots, children);
     }
+    else {
+        instance.slots = {};
+        if (children) {
+            normalizeVNodeSlots(instance, children);
+        }
+    }
+}
+function normalizeVNodeSlots(instance, children) {
+    const normalize = normalizeSlotValue(children);
+    instance.slots.default = () => normalize;
 }
 // 具名name作为instance.slots的属性名，属性值是vnode
 function normalizeObjectSlots(slots, children) {
@@ -128,6 +151,16 @@ function renderSlot(slots, name = 'default', props) {
     }
     else {
         return slots;
+    }
+}
+// update slots
+function updateSlots(instance, children) {
+    const { vnode, slots } = instance;
+    if (vnode.shapeFlag & 32 /* ShapeFlags.SLOTS_CHILDREN */) {
+        normalizeObjectSlots(children, slots);
+    }
+    else if (children) {
+        normalizeVNodeSlots(instance, children);
     }
 }
 
@@ -551,12 +584,14 @@ function createComponentInstance(vnode, parentComponent) {
         um: null,
         bum: null,
         da: null,
-        a: null
+        a: null,
+        ctx: {}
     };
     // console.log("vnode", instance);
     // console.log("emit", emit);
     // emit初始化
     instance.emit = emit.bind(null, instance);
+    instance.ctx = { _: instance };
     // console.log(instance);
     return instance;
 }
@@ -572,20 +607,28 @@ function setupComponent(instance) {
     // 初始化组件状态
     setupStateFulComponent(instance);
 }
+// 创建setup上下文
+function createSetupContext(instance) {
+    return {
+        attrs: instance.attrs,
+        slots: instance.slots,
+        emit: instance.emit,
+        expose: (exposed) => (instance.exposed = exposed || {})
+    };
+}
 // 初始化组件状态函数
 function setupStateFulComponent(instance) {
     // type是我们创建实例的时候自己手动加上的  -->createComponentInstance函数
     const Component = instance.type;
-    instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandlers);
+    instance.proxy = new Proxy(instance.ctx, publicInstanceProxyHandlers);
     // console.log("instance", instance);
     const { setup } = Component;
     // 考虑用户没有使用setup语法
     if (setup) {
         // console.log("instance emit", instance.emit);
         setCurrentInstance(instance);
-        const setupResult = setup(shallowReadonly(instance.props), {
-            emit: instance.emit
-        });
+        const instanceContext = createSetupContext(instance);
+        const setupResult = setup(shallowReadonly(instance.props), instanceContext);
         // 这里考虑两种情况，一种是setup返回的是一个对象，那么可以将这个对象注入template上下文渲染，另一种是setup返回的是一个h函数，需要走render函数
         handleSetupResult(instance, setupResult);
         setCurrentInstance(null);
@@ -594,7 +637,12 @@ function setupStateFulComponent(instance) {
     finishComponentSetup(instance);
 }
 function handleSetupResult(instance, setupResult) {
-    if (isFunction(setupResult)) ;
+    if (isFunction(setupResult)) {
+        // TODO setup返回值是h函数的情况
+        if (instance.render)
+            console.warn('setup返回一个函数,忽略render函数');
+        instance.render = setupResult;
+    }
     else if (isObject(setupResult)) {
         instance.setupState = proxyRefs(setupResult);
     }
@@ -602,12 +650,14 @@ function handleSetupResult(instance, setupResult) {
 function finishComponentSetup(instance) {
     const component = instance.type;
     // console.log('---------------------------------')
-    if (compiler && !component.rennder) {
-        if (component.template) {
-            component.render = compiler(component.template);
+    if (!instance.render) {
+        if (compiler && !component.rennder) {
+            if (component.template) {
+                component.render = compiler(component.template);
+            }
         }
+        instance.render = component.render;
     }
-    instance.render = component.render;
 }
 // provide 函数的实现
 function provide(key, value) {
@@ -691,8 +741,7 @@ function h(type, props, children) {
             // 三个以上
             children = Array.prototype.slice.call(arguments, 2);
         }
-        else if (isArray(children)) ;
-        else if (len === 3 && !isString(children)) {
+        else if (len === 3 && isVnode(children)) {
             // 等于三个 并且children是节点 才放入数组中 如果不是节点可以直接渲染  在这里就要统一处理好 后续判断只要是节点 就直接去重复patch 就不管新里面有没有可能是文本类型了
             children = [children];
         }
@@ -712,6 +761,9 @@ function renderComponentRoot(instance) {
 function shouldUpdateComponent(n1, n2) {
     const { props: preProps } = n1;
     const { props: nextProps } = n2;
+    if (n1.children !== n2.children) {
+        return true;
+    }
     for (const key in nextProps) {
         if (preProps[key] != nextProps[key]) {
             return true;
@@ -794,6 +846,10 @@ function createRenderer(options) {
     }
     // patch方法 第一次用来处理挂载 第二次用来处理更新  由n1进行判断
     function patch(n1, n2, container, parentComponent, anchor = null) {
+        if (n1 && !isSomeVNodeType(n1, n2)) {
+            unmount(n1, parentComponent);
+            n1 = null;
+        }
         // console.log(n1, n2);
         // Fragment\Text 进行单独处理 不要强制在外层套一层div  把外层标签嵌套什么交给用户决定 用户甚至可以决定什么都不嵌套
         const { shapeFlag, type } = n2;
@@ -871,7 +927,7 @@ function createRenderer(options) {
                 // console.log("array === string");
                 // 1. 卸载节点
                 // console.log(container, "container");
-                unmountChildren(container);
+                unmountChildren(container, parentComponent);
             }
             // 2. 设置children  children是一个string 直接设置即可 挂载节点  注意新节点是文本节点 所以需要使用的的是setText函数
             // 这里兼容了array ==> string 和 string ==> string的情况  如果旧节点是array 会走上面的if条件 对旧节点进行卸载
@@ -909,9 +965,6 @@ function createRenderer(options) {
         // console.log(e1);
         // console.log(e2);
         // console.log("-----");
-        function isSomeVNodeType(n1, n2) {
-            return n1.type == n2.type && n1.key == n2.key;
-        }
         // 左端算法  从左边开始找 一直找到两个节点不同为止  相同的就继续递归调用patch 检查children是否相同
         while (i <= e1 && i <= e2) {
             const n1 = c1[i];
@@ -967,7 +1020,7 @@ function createRenderer(options) {
             // console.log('旧节点比新节点长')
             while (i <= e1) {
                 // hotRemove(c1[i].el)
-                unmount(c1[i]);
+                unmount(c1[i], parentComponent);
                 i++;
             }
         }
@@ -1007,7 +1060,7 @@ function createRenderer(options) {
                  */
                 if (patched >= toBePatched) {
                     // hotRemove(prevChildren.el)
-                    unmount(prevChildren);
+                    unmount(prevChildren, parentComponent);
                 }
                 // 这里包含两种情况  null == null || null == undefined
                 if (prevChildren.key != null) {
@@ -1026,7 +1079,7 @@ function createRenderer(options) {
                 }
                 if (newIndex === undefined) {
                     // 就说明没有找到   需要卸载操作
-                    unmount(prevChildren);
+                    unmount(prevChildren, parentComponent);
                     // hotRemove(prevChildren.el)
                 }
                 else {
@@ -1106,6 +1159,10 @@ function createRenderer(options) {
         // 创建组件实例
         const instance = (vnode.component = createComponentInstance(vnode, parentComponent));
         // console.log(instance);
+        // 判断是否是KeepAlive组件 如果是的话需要注入当前渲染器的方法  在实现KeepAlive需要使用
+        if (isKeepAlive(vnode)) {
+            instance.ctx.renderer = internals;
+        }
         // 安装组件
         setupComponent(instance);
         // 对子树进行操作
@@ -1117,7 +1174,13 @@ function createRenderer(options) {
             updateComponent(n1, n2);
         }
         else {
-            mountComponent(n2, container, parentComponent);
+            if (n2.shapeFlag & 512 /* ShapeFlags.COMPONENT_KEPT_ALIVE */) {
+                // 如果当前组件是被keepalive缓存过的
+                parentComponent.ctx.activate(n2, container);
+            }
+            else {
+                mountComponent(n2, container, parentComponent);
+            }
         }
     }
     function updateComponent(n1, n2) {
@@ -1129,6 +1192,10 @@ function createRenderer(options) {
          */
         if (shouldUpdateComponent(n1, n2)) {
             instance.next = n2;
+            // TODO update prop
+            // TODO update attrs
+            // update slots
+            updateSlots(instance, n2.children);
             instance.update();
         }
         else {
@@ -1203,7 +1270,7 @@ function createRenderer(options) {
         // console.log("children", children.length);
         for (let i = 0; i < children.length; i++) {
             // hotRemove(children[i].el)
-            unmount(children[i]);
+            unmount(children[i], parentComponent);
         }
     }
     // 卸载函数
@@ -1213,18 +1280,39 @@ function createRenderer(options) {
         if (shapeFlag & 6 /* ShapeFlags.COMPONENT */) {
             // console.log(111)
             if (shapeFlag & 256 /* ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE */) {
-                // TODO 需要缓存的组件 keepalive
+                // 需要缓存的组件 keepalive
+                parentComponent.ctx.deactivate(vnode);
                 return;
             }
             const { um, bum, subTree } = component;
             bum && invokeArrayFns(bum);
-            unmount(subTree);
+            unmount(subTree, parentComponent);
             um && invokeArrayFns(um);
             return;
         }
         // 卸载
         const performRemove = () => hotRemove(el);
         performRemove();
+    }
+    // 存储一部分方法(这部分方法是渲染器(runtime-dom)传递过来的) 在挂载组件的时候 如果是KeepAlive组件 就需要把这些方法给过去
+    const internals = {
+        p: patch,
+        um: unmount,
+        m: move,
+        r: hotRemove,
+        mt: mountComponent,
+        mc: mountChildren,
+        pc: patchChildren,
+        o: options
+    };
+    function move(vnode, container, anchor, moveType) {
+        const { el, shapeFlag } = vnode;
+        if (shapeFlag & 6 /* ShapeFlags.COMPONENT */) {
+            move(vnode.component.subTree, container, anchor);
+            return;
+        }
+        console.log('move', el);
+        hotInsert(el, container, anchor);
     }
     return {
         render,
@@ -1450,6 +1538,145 @@ function traverse(value, seen) {
     return value;
 }
 
+function matches(source, name) {
+    // 三种情况  第一种是Array  第二种是字符串 第三种是正则表达式
+    // <!-- 以英文逗号分隔的字符串 -->
+    // <KeepAlive include="a,b">
+    // </KeepAlive>
+    // <!-- 正则表达式 (需使用 `v-bind`) -->
+    // <KeepAlive :include="/a|b/">
+    // </KeepAlive>
+    // <!-- 数组 (需使用 `v-bind`) -->
+    // <KeepAlive :include="['a', 'b']">
+    // </KeepAlive>
+    if (isArray(source)) {
+        return source.some((a) => a === name);
+    }
+    else if (source.test) {
+        // 如果有test方法说明是一个正则
+        return source.test(name);
+    }
+    else if (isString(source)) {
+        return source.split(',').some((a) => a === name);
+    }
+    return false;
+}
+const KeepAliveImpl = {
+    name: 'KeepAlive',
+    __isKeepAlive: true,
+    props: {
+        include: [RegExp, String, Array],
+        exclude: [RegExp, String, Array],
+        max: [String, Number]
+    },
+    setup(props, { slots }) {
+        // cache 是保存缓存的虚拟节点
+        const cache = new Map();
+        // keys用来保存key 当我们去cache中拿虚拟节点的时候需要提供一个key 这个keys就是保存的提供的key 至于为什么要单独保存这个key呢
+        // 要注意keys是一个Set类型  他是有序的  我们可以通过keys.values().next().value去拿到第一次被插入到keys的元素  然后LRU算法的时候直接把这个key删掉即可
+        const keys = new Set();
+        let current;
+        const instance = getCurrentInstance();
+        console.log(cache, instance);
+        const sharedContext = instance.ctx;
+        const { renderer: { m: move, o: { createElement }, um: _unmount } } = instance.ctx;
+        const storageContainer = createElement('div');
+        sharedContext.deactivate = function (vnode) {
+            move(vnode, storageContainer);
+        };
+        sharedContext.activate = function (vnode, container, anchor) {
+            move(vnode, container, anchor);
+        };
+        function unmount(vnode) {
+            vnode = resetShapeFlag(vnode);
+            _unmount(vnode);
+        }
+        return () => {
+            const children = slots.default();
+            const rawVNode = children[0];
+            // 为什么要拷贝一份vNode出来呢？ 这里简化了流程 在我们这种情况下即便是不拷贝一份出来也无所谓 源码用了getInnerChild方法确保返回的是虚拟节点
+            // 当包裹在suspense组件内部时，具体的节点保存在vnode.ssContent 前提是外面是一个suspense组件，我们需要拿里面的ssContent 但是我们要返回的还是rawVNode，所以我们不能修改rawVNode
+            // 不然的话 返回的时候就返回不了了
+            // 我的判断: 如果你是拿
+            /**
+             * 例子
+             * 直接修改rawVNode的值
+             * if(vnode.shapeFlag & ShapeFlags.SUSPENSE){
+             *    rawVNode = rawVNode.ssContent
+             * }else{
+             *    rawVnode = rawVNode
+             * }
+             * 后续我们想要返回最开始的rawVNode的时候 发现找不到了 被覆盖了  直接寄  所以考虑拷贝一份出来 **在正常情况下vNode和rawVNode保持一致，但是在suspense组件的情况下vNode保存的是rawVNode.ssContent**
+             */
+            let vNode = rawVNode;
+            const comp = vNode.type;
+            const name = comp.name;
+            // KeepAlive组件是只能传入一个组件
+            if (children.length > 1) {
+                current = null;
+                return children;
+            }
+            if (!isVnode(vNode) || !(vNode.shapeFlag & 4 /* ShapeFlags.STATEFUL_COMPONENT */)) {
+                // 如果不是一个节点 或者不是一个组件 是无法被缓存的
+                current = null;
+                return rawVNode;
+            }
+            const { include, exclude, max } = props;
+            // 如果不匹配用户传入的include\匹配exclude 也直接返回
+            // include 和exclude 是对等的，存在于include就不能存在于exclude中了， 举个例子: 学校假期调研,留校的填a表单,离校的填b表单,你两个表单都填,明显不符合实际情况  所以就衍生了下面的判断条件
+            if ((include && (!name || !matches(include, name))) ||
+                // 如果一个组件连name都没有 那么肯定是缓存不了的  因为找不到他 所以肯定不是缓存的他
+                (exclude && name && matches(exclude, name))
+            // 排除一个组件 肯定需要name  如果这个组件连name都没有 肯定排除的不是他  因为找不到他  简而言之 一个组件没有name 排除不了且缓存不了 就是不需要缓存
+            ) {
+                current = null;
+                return rawVNode;
+            }
+            // 将key保存到keys集合
+            keys.add(vNode.type);
+            const cacheVNode = cache.get(vNode.type);
+            if (cacheVNode) {
+                // 有值 说明被缓存过
+                vNode.component = cacheVNode.component;
+                vNode.shapeFlag |= 512 /* ShapeFlags.COMPONENT_KEPT_ALIVE */;
+                // 让当前key变得活跃 也就是位于keys集合的后面
+                keys.delete(vNode.type);
+                keys.add(vNode.type);
+            }
+            else {
+                // 缓存 在源码中 这个位置他并没有去缓存组件 他缓存组件的地方是setup函数内，就是说他在组件进来的一瞬间 直接缓存 不考虑其他的  这里他就只需要考虑是否需要进行LRU算法来移除最不活跃的组件 也就是最久没有访问的那个组件
+                // https://leetcode.cn/problems/lru-cache/ 关于LRU算法可以见leetcode这道题
+                keys.add(vNode.type);
+                // 判断是否超过max
+                if (max && keys.size > parseInt(max, 10)) {
+                    const deleteKey = keys.values().next().value;
+                    const cached = cache.get(deleteKey);
+                    if (!isSomeVNodeType(cached, current)) {
+                        unmount(cached);
+                    }
+                    cache.delete(deleteKey);
+                    keys.delete(deleteKey);
+                }
+                cache.set(rawVNode.type, vNode);
+            }
+            vNode.shapeFlag |= 256 /* ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE */;
+            rawVNode.keepAliveInstance = instance;
+            current = vNode;
+            window.cacheMap = cache;
+            return rawVNode;
+        };
+    }
+};
+const KeepAlive = KeepAliveImpl;
+function isKeepAlive(node) {
+    return node && !!node.type.__isKeepAlive;
+}
+function resetShapeFlag(vnode) {
+    vnode.shapeFlag &= ~512 /* ShapeFlags.COMPONENT_KEPT_ALIVE */;
+    vnode.shapeFlag &= ~256 /* ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE */;
+    return vnode;
+}
+
 // 定义关于浏览器的渲染器
 function createElement(type) {
     // console.log('create el 操作', type)
@@ -1543,12 +1770,14 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     toDisplayString: toDisplayString,
     initSlots: initSlots,
     renderSlot: renderSlot,
+    updateSlots: updateSlots,
     publicInstanceProxyHandlers: publicInstanceProxyHandlers,
     get currentInstance () { return exports.currentInstance; },
     setCurrentInstance: setCurrentInstance,
     getCurrentInstance: getCurrentInstance,
     createComponentInstance: createComponentInstance,
     setupComponent: setupComponent,
+    createSetupContext: createSetupContext,
     provide: provide,
     inject: inject,
     createCompiler: createCompiler,
@@ -1565,6 +1794,8 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     getShapeFlag: getShapeFlag,
     normalizeChildren: normalizeChildren,
     createTextVNode: createTextVNode,
+    isVnode: isVnode,
+    isSomeVNodeType: isSomeVNodeType,
     nextTick: nextTick,
     queueJobs: queueJobs,
     queuePreFlushCb: queuePreFlushCb,
@@ -1608,7 +1839,10 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     isRef: isRef,
     unref: unref,
     proxyRefs: proxyRefs,
-    computed: computed
+    computed: computed,
+    KeepAlive: KeepAlive,
+    isKeepAlive: isKeepAlive,
+    resetShapeFlag: resetShapeFlag
 });
 
 const TO_DISPLAY_STRING = Symbol('toDisplayString');
@@ -2021,6 +2255,7 @@ createCompiler(compilerToFunction);
 
 exports.EffectDepend = EffectDepend;
 exports.Fragment = Fragment;
+exports.KeepAlive = KeepAlive;
 exports.Text = Text;
 exports.cleanupEffect = cleanupEffect;
 exports.computed = computed;
@@ -2034,6 +2269,7 @@ exports.createGetter = createGetter;
 exports.createHook = createHook;
 exports.createRenderer = createRenderer;
 exports.createSetter = createSetter;
+exports.createSetupContext = createSetupContext;
 exports.createTextVNode = createTextVNode;
 exports.createVNode = createVNode;
 exports.effect = effect;
@@ -2045,12 +2281,15 @@ exports.initProps = initProps;
 exports.initSlots = initSlots;
 exports.inject = inject;
 exports.injectHook = injectHook;
+exports.isKeepAlive = isKeepAlive;
 exports.isProxy = isProxy;
 exports.isReactive = isReactive;
 exports.isReadonly = isReadonly;
 exports.isRef = isRef;
 exports.isShallow = isShallow;
+exports.isSomeVNodeType = isSomeVNodeType;
 exports.isTracking = isTracking;
+exports.isVnode = isVnode;
 exports.mutableHandlers = mutableHandlers;
 exports.nextTick = nextTick;
 exports.normalizeChildren = normalizeChildren;
@@ -2072,6 +2311,7 @@ exports.readonlyHandlers = readonlyHandlers;
 exports.ref = ref;
 exports.remove = remove$1;
 exports.renderSlot = renderSlot;
+exports.resetShapeFlag = resetShapeFlag;
 exports.setCurrentInstance = setCurrentInstance;
 exports.setupComponent = setupComponent;
 exports.shallowReactive = shallowReactive;
@@ -2087,6 +2327,7 @@ exports.trackRefValue = trackRefValue;
 exports.trigger = trigger;
 exports.triggerEffect = triggerEffect;
 exports.unref = unref;
+exports.updateSlots = updateSlots;
 exports.watch = watch;
 exports.watchEffect = watchEffect;
 //# sourceMappingURL=vue3.cjs.js.map
