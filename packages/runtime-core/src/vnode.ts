@@ -1,4 +1,4 @@
-import { ShapeFlags } from '@coderwei-mini-vue3/shared'
+import { isArray, isBoolean, ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { isObject, isString } from '@coderwei-mini-vue3/shared'
 export const Fragment = Symbol('Fragment')
 export const Text = Symbol('Text')
@@ -56,4 +56,14 @@ export function isVnode(value) {
 // diff算法判断是否是同一个节点
 export function isSomeVNodeType(n1, n2) {
   return n1.type == n2.type && n1.key == n2.key
+}
+
+export function normalizeVNode(children) {
+  if (children == null || isBoolean(children)) {
+    // 如果为空 或者是是布尔值 当做注释节点
+  } else if (isArray(children)) {
+  } else if (isObject(children)) {
+    return children
+  }
+  return createVNode(Text, null, String(children))
 }

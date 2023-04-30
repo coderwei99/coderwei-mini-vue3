@@ -13,6 +13,11 @@ export function isString(value: unknown) {
   return typeof value == 'string'
 }
 
+// 判断是否是一个布尔值
+export function isBoolean(value: unknown) {
+  return typeof value == 'boolean'
+}
+
 // 判断是否是相同的值 如果ref是相同的值 就不需要触发依赖
 export function hasChanged(value, oldValue) {
   return Object.is(value, oldValue)

@@ -1,5 +1,5 @@
 import { ShapeFlags } from '@coderwei-mini-vue3/shared'
-import { createVNode, Fragment } from './vnode'
+import { createVNode, Fragment, normalizeVNode } from './vnode'
 import { isArray } from '@coderwei-mini-vue3/shared'
 // 如果children里面有slot，那么把slot挂载到instance上
 export function initSlots(instance: any, children: any) {
@@ -33,7 +33,8 @@ function normalizeObjectSlots(slots: any, children: any) {
 }
 // 转成数组
 function normalizeSlotValue(value: any) {
-  return isArray(value) ? value : [value]
+  return isArray(value) ? value : [normalizeVNode(value)]
+  // return isArray(value) ? value : [value]
 }
 
 export function renderSlot(slots: any, name: string = 'default', props: any) {
