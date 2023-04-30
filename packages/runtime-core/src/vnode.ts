@@ -26,23 +26,21 @@ export function getShapeFlag(type: any) {
 }
 
 export function normalizeChildren(vnode: any, children: any) {
-  if (isString(children)) {
-    // children是字符串的情况下
-    vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.TEXT_CHILDREN
+  // 先把null排除掉  因为isObject(null)返回true 会误进下面的isObject条件
+  if (children === null) {
+    children = null
   } else if (Array.isArray(children)) {
     // children是数组的情况下
     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.ARRAY_CHILDREN
   } else if (isObject(children)) {
     // 子级是对象
     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.SLOTS_CHILDREN
+  } else {
+    // children是字符串/数字的情况下 需要将数字转换为字符串
+    children = String(children)
+    vnode.children = children //重新挂载到vnode上面
+    vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.TEXT_CHILDREN
   }
-
-  // if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-  //   if (isObject(children)) {
-  //     // 子级是对象
-  //     vnode.shapeFlag = vnode.shapeFlag | ShapeFlags.SLOTS_CHILDREN
-  //   }
-  // }
 }
 
 // 当用户传入文本的时候 需要创建一个虚拟节点 不然patch无法渲染的
