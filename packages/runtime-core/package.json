@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@coderwei-mini-vue3/reactive": "workspace:^1.0.0",
+    "@coderwei-mini-vue3/reactivity": "workspace:^1.0.0",
     "@coderwei-mini-vue3/shared": "workspace:^1.0.0"
   }
 }

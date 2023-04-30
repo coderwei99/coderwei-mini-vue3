@@ -42,7 +42,7 @@ importers:
         specifier: workspace:^1.0.0
         version: link:../shared
 
-  packages/reactive:
+  packages/reactivity:
     dependencies:
       '@coderwei-mini-vue3/shared':
         specifier: workspace:^1.0.0
@@ -50,9 +50,9 @@ importers:
 
   packages/runtime-core:
     dependencies:
-      '@coderwei-mini-vue3/reactive':
+      '@coderwei-mini-vue3/reactivity':
         specifier: workspace:^1.0.0
-        version: link:../reactive
+        version: link:../reactivity
       '@coderwei-mini-vue3/shared':
         specifier: workspace:^1.0.0
         version: link:../shared

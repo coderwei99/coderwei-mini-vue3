@@ -1,4 +1,4 @@
-import { effect } from '@coderwei-mini-vue3/reactive'
+import { effect } from '@coderwei-mini-vue3/reactivity'
 import { isKeepAlive, updateSlots } from '@coderwei-mini-vue3/runtime-dom'
 import {
   EMPTY_OBJECT,

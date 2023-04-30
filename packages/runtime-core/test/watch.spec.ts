@@ -1,5 +1,5 @@
 import { watch, watchEffect, watchPostEffect, watchSyncEffect } from '../src/apiWatch'
-import { reactive, ref } from '@coderwei-mini-vue3/reactive'
+import { reactive, ref } from '@coderwei-mini-vue3/reactivity'
 import { nextTick } from '@coderwei-mini-vue3/runtime-core'
 import { count } from 'console'
 

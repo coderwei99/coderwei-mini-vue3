@@ -1,10 +1,9 @@
 import { emit } from './componentEmit'
-import { shallowReadonly } from '@coderwei-mini-vue3/reactive'
+import { shallowReadonly, proxyRefs } from '@coderwei-mini-vue3/reactivity'
 import { publicInstanceProxyHandlers } from './commonsetupState'
 import { isObject, isFunction, isString } from '@coderwei-mini-vue3/shared'
 import { initProps } from './componentProps'
 import { initSlots } from './componentSlots'
-import { proxyRefs } from '@coderwei-mini-vue3/reactive/'
 
 // 保存组件实例  便于getCurrentInstance 中返回出去
 export let currentInstance = null

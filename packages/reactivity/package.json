@@ -1,5 +1,5 @@
 {
-  "name": "@coderwei-mini-vue3/reactive",
+  "name": "@coderwei-mini-vue3/reactivity",
   "version": "1.0.0",
   "description": "",
   "scripts": {

@@ -1,4 +1,4 @@
-import { EffectDepend, isReactive, isRef, Ref } from '@coderwei-mini-vue3/reactive'
+import { EffectDepend, isReactive, isRef, Ref } from '@coderwei-mini-vue3/reactivity'
 import { extend, isArray, isFunction, isObject } from '@coderwei-mini-vue3/shared'
 import { queuePosstFlushCb, queuePreFlushCb } from './scheduler'
 
