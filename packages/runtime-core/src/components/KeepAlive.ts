@@ -1,4 +1,4 @@
-import { isArray, isString, ShapeFlags } from '@coderwei-mini-vue3/shared'
+import { invokeArrayFns, isArray, isString, ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { getCurrentInstance } from '../component'
 import { h } from '../h'
 import { isSomeVNodeType, isVnode } from '../vnode'
@@ -58,9 +58,13 @@ const KeepAliveImpl = {
 
     sharedContext.deactivate = function (vnode) {
       move(vnode, storageContainer)
+      const { da } = vnode.component
+      da && invokeArrayFns(da)
     }
     sharedContext.activate = function (vnode, container, anchor) {
       move(vnode, container, anchor)
+      const { a } = vnode.component
+      a && invokeArrayFns(a)
     }
 
     function unmount(vnode) {
@@ -70,6 +74,10 @@ const KeepAliveImpl = {
     }
 
     return () => {
+      if (!slots.default) {
+        return null
+      }
+
       const children = slots.default()
       const rawVNode = children[0]
 
