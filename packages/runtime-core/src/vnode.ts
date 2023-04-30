@@ -54,3 +54,8 @@ export function createTextVNode(text: string) {
 export function isVnode(value) {
   return value && !!value.__v_isVNode
 }
+
+// diff算法判断是否是同一个节点
+export function isSomeVNodeType(n1, n2) {
+  return n1.type == n2.type && n1.key == n2.key
+}

@@ -14,7 +14,7 @@ import { renderComponentRoot } from './componentRenderUtils'
 import { shouldUpdateComponent } from './componentUpdateUtils'
 import { createAppAPI } from './createApp'
 import { queueJobs } from './scheduler'
-import { Fragment, Text } from './vnode'
+import { Fragment, isSomeVNodeType, Text } from './vnode'
 
 export function createRenderer(options?) {
   // 从options获取自定义的渲染器
@@ -150,10 +150,6 @@ export function createRenderer(options?) {
     } else {
       console.log('-------------------检查一下判断条件-------------------')
     }
-  }
-
-  function isSomeVNodeType(n1, n2) {
-    return n1.type == n2.type && n1.key == n2.key
   }
 
   function patchKeyedChildren(c1: any, c2: any, container: any, parentComponent: any) {
