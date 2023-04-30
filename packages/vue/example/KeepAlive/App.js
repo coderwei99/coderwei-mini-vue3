@@ -15,7 +15,8 @@ export default {
   render() {
     const components = [h(Foo),h(Bar),h(Child)]
     const res = h('div', {},
-    h(KeepAlive, {max:2}, components[this.count]),
+      h(KeepAlive, {max:2}, components[this.count]),
+      // h(KeepAlive, {max:2}, 'undefined'),
     )
     return res
   },

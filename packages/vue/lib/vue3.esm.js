@@ -10,6 +10,10 @@ function isFunction(value) {
 function isString(value) {
     return typeof value == 'string';
 }
+// 判断是否是一个布尔值
+function isBoolean(value) {
+    return typeof value == 'boolean';
+}
 // 判断是否是相同的值 如果ref是相同的值 就不需要触发依赖
 function hasChanged(value, oldValue) {
     return Object.is(value, oldValue);
@@ -101,6 +105,14 @@ function isVnode(value) {
 function isSomeVNodeType(n1, n2) {
     return n1.type == n2.type && n1.key == n2.key;
 }
+function normalizeVNode(children) {
+    if (children == null || isBoolean(children)) ;
+    else if (isArray(children)) ;
+    else if (isObject(children)) {
+        return children;
+    }
+    return createVNode(Text, null, String(children));
+}
 
 // 如果children里面有slot，那么把slot挂载到instance上
 function initSlots(instance, children) {
@@ -132,7 +144,8 @@ function normalizeObjectSlots(slots, children) {
 }
 // 转成数组
 function normalizeSlotValue(value) {
-    return isArray(value) ? value : [value];
+    return isArray(value) ? value : [normalizeVNode(value)];
+    // return isArray(value) ? value : [value]
 }
 function renderSlot(slots, name = 'default', props) {
     // console.log("开始执行renderslot");
@@ -653,38 +666,6 @@ function finishComponentSetup(instance) {
             }
         }
         instance.render = component.render;
-    }
-}
-// provide 函数的实现
-function provide(key, value) {
-    var _a;
-    let currentInstance = getCurrentInstance();
-    if (currentInstance) {
-        let { provides } = currentInstance;
-        const parentProvides = (_a = currentInstance.parent) === null || _a === void 0 ? void 0 : _a.provides;
-        // console.log("provides", provides);
-        // console.log("parentProvides", parentProvides);
-        if (provides === parentProvides) {
-            // 把provide原型指向父组件的provide
-            provides = currentInstance.provides = Object.create(parentProvides);
-        }
-        provides[key] = value;
-    }
-}
-// inject 函数的实现
-function inject(key, defaultValue) {
-    const currentInstance = getCurrentInstance();
-    if (currentInstance) {
-        const parentProvide = currentInstance.parent.provides;
-        if (key in parentProvide) {
-            return parentProvide[key];
-        }
-        else {
-            if (isFunction(defaultValue)) {
-                return defaultValue();
-            }
-            return defaultValue;
-        }
     }
 }
 let compiler;
@@ -1416,6 +1397,41 @@ const onBeforeUpdate = createHook("bu" /* LifeCycleHooks.BEFORE_UPDATE */);
 const onUpdated = createHook("u" /* LifeCycleHooks.UPDATED */);
 const onBeforeUnmount = createHook("bum" /* LifeCycleHooks.BEFORE_UNMOUNT */);
 const onUnmounted = createHook("um" /* LifeCycleHooks.UNMOUNTED */);
+const onActivated = createHook("a" /* LifeCycleHooks.ACTIVATED */);
+const onDeactivated = createHook("da" /* LifeCycleHooks.DEACTIVATED */);
+
+// provide 函数的实现
+function provide(key, value) {
+    var _a;
+    let currentInstance = getCurrentInstance();
+    if (currentInstance) {
+        let { provides } = currentInstance;
+        const parentProvides = (_a = currentInstance.parent) === null || _a === void 0 ? void 0 : _a.provides;
+        // console.log("provides", provides);
+        // console.log("parentProvides", parentProvides);
+        if (provides === parentProvides) {
+            // 把provide原型指向父组件的provide
+            provides = currentInstance.provides = Object.create(parentProvides);
+        }
+        provides[key] = value;
+    }
+}
+// inject 函数的实现
+function inject(key, defaultValue) {
+    const currentInstance = getCurrentInstance();
+    if (currentInstance) {
+        const parentProvide = currentInstance.parent.provides;
+        if (key in parentProvide) {
+            return parentProvide[key];
+        }
+        else {
+            if (isFunction(defaultValue)) {
+                return defaultValue();
+            }
+            return defaultValue;
+        }
+    }
+}
 
 function watchEffect(source, options = {}) {
     return doWatch(source, null, options);
@@ -1579,15 +1595,22 @@ const KeepAliveImpl = {
         const storageContainer = createElement('div');
         sharedContext.deactivate = function (vnode) {
             move(vnode, storageContainer);
+            const { da } = vnode.component;
+            da && invokeArrayFns(da);
         };
         sharedContext.activate = function (vnode, container, anchor) {
             move(vnode, container, anchor);
+            const { a } = vnode.component;
+            a && invokeArrayFns(a);
         };
         function unmount(vnode) {
             vnode = resetShapeFlag(vnode);
             _unmount(vnode);
         }
         return () => {
+            if (!slots.default) {
+                return null;
+            }
             const children = slots.default();
             const rawVNode = children[0];
             // 为什么要拷贝一份vNode出来呢？ 这里简化了流程 在我们这种情况下即便是不拷贝一份出来也无所谓 源码用了getInnerChild方法确保返回的是虚拟节点
@@ -1774,8 +1797,6 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     createComponentInstance: createComponentInstance,
     setupComponent: setupComponent,
     createSetupContext: createSetupContext,
-    provide: provide,
-    inject: inject,
     createCompiler: createCompiler,
     emit: emit,
     initProps: initProps,
@@ -1792,6 +1813,7 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     createTextVNode: createTextVNode,
     isVnode: isVnode,
     isSomeVNodeType: isSomeVNodeType,
+    normalizeVNode: normalizeVNode,
     nextTick: nextTick,
     queueJobs: queueJobs,
     queuePreFlushCb: queuePreFlushCb,
@@ -1804,6 +1826,10 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     onUpdated: onUpdated,
     onBeforeUnmount: onBeforeUnmount,
     onUnmounted: onUnmounted,
+    onActivated: onActivated,
+    onDeactivated: onDeactivated,
+    provide: provide,
+    inject: inject,
     EffectDepend: EffectDepend,
     cleanupEffect: cleanupEffect,
     effect: effect,
@@ -2249,5 +2275,5 @@ function compilerToFunction(template) {
 }
 createCompiler(compilerToFunction);
 
-export { EffectDepend, Fragment, KeepAlive, ReactiveFlags, Text, cleanupEffect, computed, convert, createApp, createAppAPI, createCompiler, createComponentInstance, createVNode as createElementBlock, createGetter, createHook, createRenderer, createSetter, createSetupContext, createTextVNode, createVNode, currentInstance, effect, emit, getCurrentInstance, getShapeFlag, h, initProps, initSlots, inject, injectHook, isKeepAlive, isProxy, isReactive, isReadonly, isRef, isShallow, isSomeVNodeType, isTracking, isVnode, mutableHandlers, nextTick, normalizeChildren, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, provide, proxyRefs, publicInstanceProxyHandlers, queueJobs, queuePosstFlushCb, queuePreFlushCb, reactive, readonly, readonlyHandlers, ref, remove$1 as remove, renderSlot, resetShapeFlag, setCurrentInstance, setupComponent, shallowReactive, shallowReactiveHandlers, shallowReadonly, shallowReadonlyHandlers, stop, tarckEffect, toDisplayString, toRaw, track, trackRefValue, trigger, triggerEffect, unref, updateSlots, watch, watchEffect };
+export { EffectDepend, Fragment, KeepAlive, ReactiveFlags, Text, cleanupEffect, computed, convert, createApp, createAppAPI, createCompiler, createComponentInstance, createVNode as createElementBlock, createGetter, createHook, createRenderer, createSetter, createSetupContext, createTextVNode, createVNode, currentInstance, effect, emit, getCurrentInstance, getShapeFlag, h, initProps, initSlots, inject, injectHook, isKeepAlive, isProxy, isReactive, isReadonly, isRef, isShallow, isSomeVNodeType, isTracking, isVnode, mutableHandlers, nextTick, normalizeChildren, normalizeVNode, onActivated, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onDeactivated, onMounted, onUnmounted, onUpdated, provide, proxyRefs, publicInstanceProxyHandlers, queueJobs, queuePosstFlushCb, queuePreFlushCb, reactive, readonly, readonlyHandlers, ref, remove$1 as remove, renderSlot, resetShapeFlag, setCurrentInstance, setupComponent, shallowReactive, shallowReactiveHandlers, shallowReadonly, shallowReadonlyHandlers, stop, tarckEffect, toDisplayString, toRaw, track, trackRefValue, trigger, triggerEffect, unref, updateSlots, watch, watchEffect };
 //# sourceMappingURL=vue3.esm.js.map

@@ -1,25 +1,31 @@
-import { h, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref } from '../../../lib/vue3.esm.js'
+import { h, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref,onActivated,onDeactivated } from '../../../lib/vue3.esm.js'
 
 export default {
   name: 'foo',
   setup() {
-    onMounted(() =>{
+    onMounted(() => {
       console.log('foo onMounted is call ');
     })
-    onUpdated(() =>{
+    onUpdated(() => {
       console.log('foo onUpdated is call ');
     })
-    onBeforeMount(() =>{
+    onBeforeMount(() => {
       console.log('foo onBeforeMount is call ');
     })
-    onBeforeUpdate(() =>{
+    onBeforeUpdate(() => {
       console.log('foo onBeforeUpdate is call ');
     })
-    onBeforeUnmount(() =>{
+    onBeforeUnmount(() => {
       console.log('foo onBeforeUnmount is call ');
     })
-    onUnmounted(() =>{
+    onUnmounted(() => {
       console.log('foo onUnmounted is call ');
+    })
+    onActivated(() => {
+      console.log('foo onActivated');
+    })
+    onDeactivated(() => {
+      console.log('foo onDeactivated');
     })
     return {
     }

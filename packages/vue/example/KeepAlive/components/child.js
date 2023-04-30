@@ -1,4 +1,4 @@
-import { h, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref } from '../../../lib/vue3.esm.js'
+import { h, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref,onActivated,onDeactivated } from '../../../lib/vue3.esm.js'
 
 export default {
   name: 'child',
@@ -20,6 +20,12 @@ export default {
     })
     onUnmounted(() =>{
       console.log('child onUnmounted is call ');
+    })
+    onActivated(() => {
+      console.log('child onActivated');
+    })
+    onDeactivated(() => {
+      console.log('child onDeactivated');
     })
     return {
     }

@@ -1,4 +1,4 @@
-import { h, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref,onActivated,onDeactivated } from '../../../lib/vue3.esm.js'
+import { h, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref } from '../../../lib/vue3.esm.js'
 
 export default {
   name: 'bar',
@@ -20,12 +20,6 @@ export default {
     })
     onUnmounted(() =>{
       console.log('bar onUnmounted is call ');
-    })
-    onActivated(() => {
-      console.log('bar onActivated');
-    })
-    onDeactivated(() => {
-      console.log('bar onDeactivated');
     })
     return {
     }
