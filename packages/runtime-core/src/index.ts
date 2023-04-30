@@ -19,5 +19,7 @@ export * from './apiInject'
 export { watchEffect, watch } from './apiWatch'
 export * from '@coderwei-mini-vue3/reactivity'
 export * from './components/KeepAlive'
+export * from './apiDefineAsyncComponent'
+export * from './apiDefineComponent'
 
 export { toDisplayString } from '@coderwei-mini-vue3/shared'
