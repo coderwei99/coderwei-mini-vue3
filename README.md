@@ -30,6 +30,7 @@ reactivity 部分
 - [x] 实现 isRef 和 unRef 功能
 - [x] 实现 proxyRefs 功能
 - [x] 实现 computed 计算属性功能
+- [ ] 实现 toRef & toRefs功能
 
 runtime-core 部分
 - [x] 实现初始化 component 主流程
@@ -55,7 +56,7 @@ runtime-core 部分
 - [x] 实现 watchPostEffect 功能
 - [x] 实现 watchSyncEffect 功能
 - [x] 实现 defineComponent 功能
-- [ ] 实现 defineAsyncComponent 功能
+- [x] 实现 defineAsyncComponent 功能
 - [ ] 实现 defineCustomElement 功能
 - [x] 实现 KeepAlive 组件
 - [ ] 实现 Teleport 组件
