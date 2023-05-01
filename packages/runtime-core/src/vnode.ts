@@ -2,6 +2,7 @@ import { isArray, isBoolean, ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { isObject, isString } from '@coderwei-mini-vue3/shared'
 export const Fragment = Symbol('Fragment')
 export const Text = Symbol('Text')
+export const Comment = Symbol('Comment')
 
 export { createVNode as createElementBlock }
 export function createVNode(type, props?, children?) {
@@ -61,7 +62,9 @@ export function isSomeVNodeType(n1, n2) {
 export function normalizeVNode(children) {
   if (children == null || isBoolean(children)) {
     // 如果为空 或者是是布尔值 当做注释节点
+    return createVNode(Comment)
   } else if (isArray(children)) {
+    return createVNode(Fragment, null, children.slice())
   } else if (isObject(children)) {
     return children
   }
