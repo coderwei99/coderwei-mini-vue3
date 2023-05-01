@@ -24,33 +24,106 @@ export function defineAsyncComponent(option: AsyncComponentOptions | AsyncCompon
       loader: option as AsyncComponentLoader
     }
   }
-  const { loader, loadingComponent, errorComponent, delay, timeout, suspensible, onError } =
-    option as AsyncComponentOptions
+  const {
+    loader,
+    loadingComponent,
+    errorComponent,
+    delay = 0,
+    timeout,
+    suspensible,
+    onError: userOnError
+  } = option as AsyncComponentOptions
   // debugger
+  // 定义异步组件实例
+  let instance
+
+  // 超时次数
+  let retries = 0
+  let retry = () => {
+    retries++
+    return load()
+  }
+
+  let isError = ref(false)
+  // 错误的情况
+  let error: any = ref('')
+  // 是否是超时的状态
+  let isTimout = ref(false)
+
+  const load = () => {
+    return loader()
+      .then((i) => {
+        instance = i
+        console.log('----------')
+        // 考虑到用户可能会使用onError参数 来发几次请求  他后面的请求如果成功了 我们是需要给他渲染成功状态的组件的 所以这里就把超时状态设置为false
+        // 超时状态只有在第一次请求 超时 并且 用户没有再次发送请求  他才会true  也会导致load().then()方法内部的代码进不去  就是不会渲染成功的组件
+        // 这种情况只有在 用户第一次发送异步组件请求 超时了， 然后我们展示了错误的组件  但是过一会 异步组件的请求成功了  我们也不渲染成功的组件  因为timeout超时了 就是失败了  严格按照逻辑来进行 错过了就是错过了
+        // 比如说 超时时间给了3000  异步组件实际耗时3050  没用  当失败处理
+        if (retries !== 0) isTimout.value = false
+        return i
+      })
+      .catch((err) => {
+        err = err instanceof Error ? err : new Error(err)
+        isError.value = true
+        if (userOnError) {
+          console.log('用户传入了错误处理函数,将错误抛给用户手动处理')
+          error.value = err
+
+          return new Promise((resolve, reject) => {
+            const userRetry = () => resolve(retry())
+            const userFail = () => reject(err)
+            userOnError(err, userRetry, userFail, retries + 1)
+          })
+        } else {
+          throw err
+        }
+      })
+  }
+
   return {
     name: 'AsyncComponentWrapper',
     setup() {
-      // 定义异步组件实例
-      let instance
       // 标志的异步组件是否加载完成
       let loaded = ref(false)
       // 标志是否要展示加载中的组件 考虑到有的时候用户的网络特别快 一瞬间就加载出来了 那么我们就不需要给一个默认组件了 不然会有一个默认组件 ==> 异步组件的切换闪烁
       // 这个时间是由用户决定了 异步组件的耗时大于用户传入的时间 才渲染个默认组件到界面
       let isShowComponent = ref(false)
       let timer
-      timer = setTimeout(() => {
-        // 开启一个定时器 用户传入的时间到了 就说明可以渲染默认组件了
-        isShowComponent.value = true
-      }, delay)
+
       onUnmounted(() => {
         // 组件卸载的时候把定时器清除一下
         clearTimeout(timer)
       })
 
-      loader().then((c) => {
-        instance = c
-        loaded.value = true
-      })
+      if (timeout != null) {
+        setTimeout(() => {
+          // 确保error的value没有值的情况下才去走超时的逻辑 因为获取异步组件已经错误了  在去计算是否超时就没有意义了
+          if (!isError.value && !error.value && !loaded.value) {
+            const err = new Error(`Async component timed out after ${timeout}ms.`)
+            error.value = err
+            isTimout.value = true
+            console.error(err)
+            clearTimeout(timer)
+          }
+        }, timeout)
+      }
+
+      load()
+        .then((i) => {
+          if (!isTimout.value) {
+            console.log(i, '---')
+            loaded.value = true
+          }
+        })
+        .catch((err) => {
+          console.log(err, 'e')
+          error.value = err
+        })
+
+      timer = setTimeout(() => {
+        // 开启一个定时器 用户传入的时间到了 就说明可以渲染默认组件了
+        isShowComponent.value = true
+      }, delay)
 
       /*
        定义默认的占位符 用户可能不传入加载异步组件中使用的组件 那么我们下面返回出去的函数(也就是render函数)在执行的时候就拿到一个type为Comment的虚拟节点作为子树 去进行渲染 
@@ -66,9 +139,15 @@ export function defineAsyncComponent(option: AsyncComponentOptions | AsyncCompon
         if (loaded.value) {
           // 如果loaded为true  表示异步组件已经加载下来了
           return createVNode(instance)
-        } else if (!loaded.value && loadingComponent && isShowComponent.value) {
+        } else if (loadingComponent && isShowComponent.value && !error.value) {
           return createVNode(loadingComponent)
-        } else if (!delay) {
+        } else if (errorComponent && error.value) {
+          // 获取异步组件的时候出现错误 如果用户指定了错误组件 我们就渲染它
+          return createVNode(errorComponent, {
+            error: error.value
+          })
+        } else if (!loadingComponent && !error.value) {
+          // 用户没有传递loadin组件 我们给他一个默认的 vue源码内部并没有提供  一个默认的loading组件
           return defaultPlaceholder
         }
       }
