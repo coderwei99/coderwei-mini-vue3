@@ -28,7 +28,7 @@ export function getShapeFlag(type: any) {
 
 export function normalizeChildren(vnode: any, children: any) {
   // 先把null排除掉  因为isObject(null)返回true 会误进下面的isObject条件
-  if (children === null) {
+  if (children == null) {
     children = null
   } else if (Array.isArray(children)) {
     // children是数组的情况下
