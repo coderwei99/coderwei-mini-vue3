@@ -72,3 +72,23 @@ export function proxyRefs(value) {
         }
       })
 }
+
+class ObjectRefImpl {
+  public __v_isRef = true
+  constructor(public _object, public key, public defaultValue?) {}
+
+  set value(newValue) {
+    if (!hasChanged(newValue, this._object[this.key])) {
+      this._object[this.key] = newValue
+    }
+  }
+
+  get value() {
+    const val = this._object[this.key]
+    return val === undefined ? this.defaultValue : val
+  }
+}
+
+export function toRef(target, key, defaultValue?) {
+  return new ObjectRefImpl(target, key, defaultValue)
+}
