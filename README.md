@@ -30,7 +30,8 @@ reactivity 部分
 - [x] 实现 isRef 和 unRef 功能
 - [x] 实现 proxyRefs 功能
 - [x] 实现 computed 计算属性功能
-- [ ] 实现 toRef & toRefs功能
+- [x] 实现 toRef 功能
+- [x] 实现 toRefs 功能
 
 runtime-core 部分
 - [x] 实现初始化 component 主流程
@@ -50,6 +51,8 @@ runtime-core 部分
 - [x] 更新 element 的 children
 - [x] 更新 element 的双端对比 diff 算法
 - [x] 实现组件更新功能
+- [x] 实现更新组件props功能
+- [ ] 实现更新组件attrs功能
 - [x] nextTick 的实现 (vue3 视图更新是异步的，如果我们想在组件更新的时候拿到当前组件的实例或者是操作当前组件的某些数据、dom，正常情况下是拿不到的，因为我们写在 script 标签内的代码都是同步的，那个时候视图还没有更新，拿到的自然都是旧数据)
 - [x] 实现 watch 功能
 - [x] 实现 watchEffect 功能
@@ -84,3 +87,4 @@ monorepo
 - [x] 目前处理子组件 children 的逻辑有问题，当子组件的 children 为字符串的时候，渲染会出错
 - [x] 组件的切换无法正常切换，初步估计是前面的代码不兼容组件销毁的操作
 - [x] h函数children参数传递数字不渲染 (包括使用变量但是变量是一个数字类型) 在进行patchChildren的时候都不成立 patchFlag为1  需要单独处理
+- [ ] h函数传递两个参数不渲染  h('div','hello word') 
