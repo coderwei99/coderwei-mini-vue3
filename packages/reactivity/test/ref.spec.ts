@@ -1,6 +1,6 @@
 import { effect } from '../src/effect'
 import { reactive } from '../src/reactive'
-import { ref, isRef, unref, proxyRefs, toRef } from '../src/ref'
+import { ref, isRef, unref, proxyRefs, toRef, toRefs } from '../src/ref'
 
 describe('reactive', () => {
   it('should hold a value', () => {
@@ -94,5 +94,25 @@ describe('reactive', () => {
 
     const age = toRef(obj, 'age', 999)
     expect(age.value).toBe(999)
+  })
+
+  it('toRefs', () => {
+    const obj = reactive({
+      name: 'coderwei',
+      age: 18
+    })
+
+    let dummy
+    effect(() => {
+      dummy = obj.age
+    })
+    const objToRefs = toRefs(obj)
+    expect(objToRefs.age.value).toBe(18)
+    expect(dummy).toBe(18)
+
+    objToRefs.age.value++
+    expect(objToRefs.age.value).toBe(19)
+    expect(obj.age).toBe(19)
+    expect(dummy).toBe(19)
   })
 })

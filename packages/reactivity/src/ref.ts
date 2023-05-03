@@ -92,3 +92,11 @@ class ObjectRefImpl {
 export function toRef(target, key, defaultValue?) {
   return new ObjectRefImpl(target, key, defaultValue)
 }
+
+export function toRefs(target) {
+  const ret: any = {}
+  for (const key in target) {
+    ret[key] = new ObjectRefImpl(target, key)
+  }
+  return ret
+}
