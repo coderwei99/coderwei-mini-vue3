@@ -23,7 +23,7 @@ export function h(type, props?, children?) {
       return createVNode(type, props)
     } else {
       // 如果是数组、文本
-      return createVNode(type, null, children)
+      return createVNode(type, null, props)
     }
   } else {
     if (len > 3) {
