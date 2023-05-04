@@ -78,6 +78,11 @@ compiler-core 部分
 - [x] 实现 codegen 模块
 - [x] 定义统一的出口(定义 baseCompiler 函数)
 
+兼容vue2部分
+- [ ] 兼容options api
+- [ ] 兼容vue2的生命周期 (beforeCreate、created等)
+
+
 monorepo
 - [x] 使用monorepo重构整个项目
 - [x] 使用vitest进行TDD测试
