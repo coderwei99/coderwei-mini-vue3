@@ -63,7 +63,7 @@ runtime-core 部分
 - [x] 实现 defineAsyncComponent 功能
 - [ ] 实现 defineCustomElement 功能
 - [x] 实现 KeepAlive 组件
-- [ ] 实现 Teleport 组件
+- [x] 实现 Teleport 组件
 - [ ] 实现 Suspense 组件
 - [x] 实现 vue3的生命周期
 
@@ -94,3 +94,4 @@ monorepo
 - [x] 组件的切换无法正常切换，初步估计是前面的代码不兼容组件销毁的操作
 - [x] h函数children参数传递数字不渲染 (包括使用变量但是变量是一个数字类型) 在进行patchChildren的时候都不成立 patchFlag为1  需要单独处理
 - [x] h函数传递两个参数不渲染  h('div','hello word') 
+- [ ] 渲染普通element元素 props传入style 最终生成的dom是style="object Object"的形式 需要在设置属性的时候进行区分(style、class)
