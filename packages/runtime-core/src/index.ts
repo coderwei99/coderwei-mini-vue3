@@ -21,5 +21,6 @@ export * from '@coderwei-mini-vue3/reactivity'
 export * from './components/KeepAlive'
 export * from './apiDefineAsyncComponent'
 export * from './apiDefineComponent'
+export * from './components/Teleport'
 
 export { toDisplayString } from '@coderwei-mini-vue3/shared'

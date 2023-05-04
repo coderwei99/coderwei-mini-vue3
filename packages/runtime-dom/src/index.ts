@@ -73,6 +73,10 @@ function remove(child) {
   }
 }
 
+function querySelect(note) {
+  return document.querySelector(note)
+}
+
 let renderer
 
 function ensureRenderer() {
@@ -86,7 +90,8 @@ function ensureRenderer() {
       setElementText,
       patchProp,
       insert,
-      remove
+      remove,
+      querySelect
     }))
   )
 }

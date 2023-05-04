@@ -1,5 +1,6 @@
 import { isArray, isBoolean, ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { isObject, isString } from '@coderwei-mini-vue3/shared'
+import { isTeleport } from './components/Teleport'
 export const Fragment = Symbol('Fragment')
 export const Text = Symbol('Text')
 export const Comment = Symbol('Comment')
@@ -23,7 +24,13 @@ export function createVNode(type, props?, children?) {
 }
 
 export function getShapeFlag(type: any) {
-  return isString(type) ? ShapeFlags.ELEMENT : isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0
+  return isString(type)
+    ? ShapeFlags.ELEMENT
+    : isTeleport(type)
+    ? ShapeFlags.TELEPORT
+    : isObject(type)
+    ? ShapeFlags.STATEFUL_COMPONENT
+    : 0
 }
 
 export function normalizeChildren(vnode: any, children: any) {

@@ -64,6 +64,9 @@ export function createRenderer(options?) {
           // TODO 组件的情况
           // console.log("type == Object", n2);
           processComponent(n1, n2, container, parentComponent)
+        } else if (n2.shapeFlag & ShapeFlags.TELEPORT) {
+          console.log('patch teleport component')
+          n2.type.process(n1, n2, container, parentComponent, anchor, internals)
         }
     }
   }
@@ -352,13 +355,13 @@ export function createRenderer(options?) {
   }
 
   // 处理children是数组的情况
-  function mountChildren(children: any, container: any, parentComponent: any) {
+  function mountChildren(children: any, container: any, parentComponent: any, anchor = null) {
     // 走到这里说明vnode.children是数组 遍历添加到container
     // console.log(children, "children");
 
     children.forEach((node) => {
       // console.log("处理children是数组的情况", node);
-      patch(null, node, container, parentComponent)
+      patch(null, node, container, parentComponent, anchor)
     })
   }
 
