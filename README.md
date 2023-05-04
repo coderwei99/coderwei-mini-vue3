@@ -1,4 +1,5 @@
-# VUE-NEXT-3.x
+# coderwei-mini-vue3
+
 手写 vue3 核心源码，理解其原理 by myself
 
 ## 🙌 目的
