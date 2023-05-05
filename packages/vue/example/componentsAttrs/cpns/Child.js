@@ -10,8 +10,20 @@ export default {
       type: Number
     }
   },
-  setup() {},
+  setup(props, ctx) {
+    const handleClick = () => {
+      console.log(ctx.attrs.number)
+    }
+    return {
+      handleClick
+    }
+  },
   render() {
-    return h('div', `age:${this.age}`)
+    return h(
+      'div',
+      {},
+      h('div', `age:${this.age}`),
+      h('button', { onClick: this.handleClick }, 'add3')
+    )
   }
 }

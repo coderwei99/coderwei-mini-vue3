@@ -16,8 +16,8 @@ export default {
       h(Child, {
         // 这里会进行了统一的规范: name & age 如果是props 则会在组件内部通过defineProps进行定义  其余的属性统一当做attrs(即不属于props的都会被当成attrs)
         name: 'coderwei',
-        age: this.age,
-        number: 95527666,
+        age: 19,
+        number: this.age,
         cart: 'bar'
       }),
       h('button', { onClick: this.handleClick }, 'add')
