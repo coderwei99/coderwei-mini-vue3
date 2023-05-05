@@ -9,7 +9,7 @@ export { createVNode as createElementBlock }
 export function createVNode(type, props?, children?) {
   const vnode = {
     type,
-    props: props ?? {},
+    props: props ?? null,
     children,
     component: null,
     key: props && props.key,

@@ -346,8 +346,10 @@ export function createRenderer(options?) {
     }
 
     // 处理props
-    for (const key of Object.getOwnPropertyNames(props)) {
-      hotPatchProp(el, key, null, props[key])
+    if (props) {
+      for (const key of Object.getOwnPropertyNames(props)) {
+        hotPatchProp(el, key, null, props[key])
+      }
     }
     // 将创建的dom元素添加在父元素
     hotInsert(el, container, anchor)

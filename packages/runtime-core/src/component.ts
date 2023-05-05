@@ -30,7 +30,8 @@ export function createComponentInstance(vnode: any, parentComponent: any) {
     provides: parentComponent ? parentComponent.provides : ({} as Record<string, any>), //父组件提供的数据
     parent: parentComponent, //父组件实例
     isMouted: false, //标志组件是否挂载  后续用于判断是更新还是挂载
-    subTree: {},
+    subTree: {}, //子树的虚拟节点
+    propsOptions: type.props || {}, //组件的props选项，在组件内部会通过defineProps来定义props，因为在使用组件的直接绑定属性不一定全都是props
     setupState: {},
     next: null,
     // 生命周期
