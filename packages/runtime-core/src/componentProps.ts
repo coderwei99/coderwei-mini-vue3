@@ -85,7 +85,6 @@ export function patchComponentAttrs(attrs, newProps) {
   }
 
   // 删除没用的key
-
   for (const key in attrs) {
     if (!(key in newProps)) {
       delete attrs[key]
