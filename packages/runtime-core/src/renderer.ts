@@ -1,5 +1,10 @@
 import { effect } from '@coderwei-mini-vue3/reactivity'
-import { isKeepAlive, updateSlots } from '@coderwei-mini-vue3/runtime-dom'
+import {
+  isKeepAlive,
+  patchComponentProps,
+  updateSlots,
+  patchComponentAttrs
+} from '@coderwei-mini-vue3/runtime-dom'
 import {
   EMPTY_OBJECT,
   invokeArrayFns,
@@ -398,37 +403,10 @@ export function createRenderer(options?) {
     }
   }
 
-  function patchComponentProps(props, newProps) {
-    for (let key in newProps) {
-      const prop = props[key]
-      const newProp = newProps[key]
-      //不同就更新
-      if (prop !== newProp) {
-        props[key] = newProps[key]
-      }
-    }
-    // 删除旧的prop不存在与新的prop的属性
-    /* 
-      newProps:{
-        name:"coderwei",
-      }
-      oldProps:{
-        name:"coder",
-        age:19
-      }
-      // 这个age在新的component中就不需要了  所以这里可以直接选择删除
-    */
-    for (let key in props) {
-      if (!(key in newProps)) {
-        delete props[key]
-      }
-    }
-  }
-
   function updateComponent(n1: any, n2: any) {
     // console.log('更新操作')
     const instance = (n2.component = n1.component)
-    const { props } = instance
+    const { props, attrs } = instance
     const { props: newProps } = n2
     /**
      * 判断页面内的组件是否需要更新
@@ -439,7 +417,7 @@ export function createRenderer(options?) {
       // TODO update prop
       patchComponentProps(props, newProps)
       // TODO update attrs
-
+      patchComponentAttrs(attrs, newProps)
       // update slots
       updateSlots(instance, n2.children)
 
