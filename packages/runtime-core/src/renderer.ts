@@ -5,14 +5,7 @@ import {
   updateSlots,
   patchComponentAttrs
 } from '@coderwei-mini-vue3/runtime-dom'
-import {
-  EMPTY_OBJECT,
-  invokeArrayFns,
-  isFunction,
-  isObject,
-  isOn,
-  isString
-} from '@coderwei-mini-vue3/shared'
+import { EMPTY_OBJECT, invokeArrayFns, isString } from '@coderwei-mini-vue3/shared'
 import { ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { createComponentInstance, setupComponent } from './component'
 import { renderComponentRoot } from './componentRenderUtils'
