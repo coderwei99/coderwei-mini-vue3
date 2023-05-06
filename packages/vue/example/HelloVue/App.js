@@ -2,21 +2,35 @@ import { h, reactive, ref, effect, stop } from '../../lib/vue3.esm.js'
 
 export default {
   render() {
-    return h('div', {
-      id: 'root',
-      class: ['flex', 'container-r'],
-      onClick: this.aclick
-    }, [
-      h('p', { class: 'red' }, 'hello'),
-      h('p', { class: 'blue' }, ` ${this.wei.age}`),
-    ])
+    return h(
+      'div',
+      {
+        id: 'root',
+        class: ['flex', 'container-r'],
+        onClick: this.aclick
+      },
+      [
+        h('p', { class: 'red' }, 'hello'),
+        h(
+          'p',
+          {
+            class: 'blue',
+            style: {
+              color: 'red',
+              background: 'aqua'
+            }
+          },
+          ` ${this.wei.age}`
+        )
+      ]
+    )
   },
   setup() {
     // 返回对象或者h()渲染函数
     let wei = reactive({
       age: 18
     })
-    let age;
+    let age
     const runner = effect(() => {
       age = wei.age
     })
@@ -28,7 +42,6 @@ export default {
       // console.log(wei.age);
       // console.log(age);
       stop(runner)
-
     }
 
     return {
@@ -38,4 +51,3 @@ export default {
     }
   }
 }
-
