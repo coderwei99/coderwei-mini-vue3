@@ -16,9 +16,8 @@
 
 当然也可以选择自己打包
 ~~~shell
-  npm run build
-  yarn build
   pnpm run build
+  or
   nr build 
 ~~~
 ## 🗯️ 插件
