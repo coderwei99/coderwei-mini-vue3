@@ -23,6 +23,15 @@ function setElementText(el, text) {
   el.textContent = text
 }
 
+// 处理浏览器端 元素style样式
+function patchStyle(el, value) {
+  console.log(value)
+  const { style } = el
+  for (const key in value) {
+    style[key] = value[key]
+  }
+}
+
 function patchProp(el, key, preValue, nextValue) {
   // preValue 之前的值
   // 为了之后 update 做准备的值
@@ -52,6 +61,8 @@ function patchProp(el, key, preValue, nextValue) {
         invokers[key] = undefined
       }
     }
+  } else if (key === 'style') {
+    patchStyle(el, nextValue)
   } else {
     if (nextValue === null || nextValue === undefined) {
       el.removeAttribute(key)
