@@ -1,5 +1,6 @@
 import { isArray, isBoolean, ShapeFlags } from '@coderwei-mini-vue3/shared'
 import { isObject, isString } from '@coderwei-mini-vue3/shared'
+import { isSuspense } from './components/suspense'
 import { isTeleport } from './components/Teleport'
 export const Fragment = Symbol('Fragment')
 export const Text = Symbol('Text')
@@ -28,6 +29,8 @@ export function getShapeFlag(type: any) {
     ? ShapeFlags.ELEMENT
     : isTeleport(type)
     ? ShapeFlags.TELEPORT
+    : isSuspense(type)
+    ? ShapeFlags.SUSPENSE
     : isObject(type)
     ? ShapeFlags.STATEFUL_COMPONENT
     : 0
