@@ -62,7 +62,7 @@ export function baseParse(content: string) {
   return createRoot(parseChildren(context, []))
 }
 
-function isEnd(context, ancestors) {
+function isEnd(context: ParserContext, ancestors) {
   // 是否结束
   // 1. 当遇到结束标签 比如:</div>
   // 2. 当context.source.length === 0
@@ -84,7 +84,7 @@ function isEnd(context, ancestors) {
   return !s
 }
 
-function parseChildren(context, ancestors) {
+function parseChildren(context: ParserContext, ancestors) {
   // console.log(context.source, "-------------");
 
   const nodes: any[] = []
@@ -109,7 +109,7 @@ function parseChildren(context, ancestors) {
   return nodes
 }
 
-function parseInterpolation(context) {
+function parseInterpolation(context: ParserContext) {
   // "{{message}}"
   // "message}}"
 
@@ -149,19 +149,19 @@ function createRoot(children) {
 }
 
 // 插值语法的推进函数
-function advanceBy(context: any, length: number) {
+function advanceBy(context: ParserContext, length: number) {
   context.source = context.source.slice(length)
 }
 
 // 推进多余的空格
-function advanceSpaces(context): void {
+function advanceSpaces(context: ParserContext): void {
   const match = /^[\t\r\n\f ]+/.exec(context.source)
   if (match) {
     advanceBy(context, match[0].length)
   }
 }
 
-function parseElement(context: any, ancestors) {
+function parseElement(context: ParserContext, ancestors) {
   const element: any = parseTag(context, TagTypes.TAGSSTART) //处理开始标签
   ancestors.push(element)
   element.children = parseChildren(context, ancestors)
@@ -185,7 +185,7 @@ function parseElement(context: any, ancestors) {
   return element
 }
 
-function parseTag(context: any, type: TagTypes) {
+function parseTag(context: ParserContext, type: TagTypes) {
   // console.log(context.source)
   const match: any = /^<\/?([a-z]*)/i.exec(context.source)
   // console.log(match, '------------')
@@ -212,7 +212,7 @@ function parseTag(context: any, type: TagTypes) {
   }
 }
 
-function parseText(context: any): any {
+function parseText(context: ParserContext): any {
   let endIndex = context.source.length
   let endToken = ['<', '{{']
 
@@ -234,7 +234,7 @@ function parseText(context: any): any {
   }
 }
 
-function parseAttributes(context: any, type: TagTypes) {
+function parseAttributes(context: ParserContext, type: TagTypes) {
   const props: any[] = []
   const attributesName = new Set()
 
@@ -245,7 +245,7 @@ function parseAttributes(context: any, type: TagTypes) {
   }
   return props
 }
-function parseAttribute(context, nameSet) {
+function parseAttribute(context: ParserContext, nameSet) {
   // 处理key
   const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!
   // 拿到=前面的部分
@@ -276,7 +276,7 @@ function parseAttribute(context, nameSet) {
   }
 }
 
-function parseAttributeValue(context) {
+function parseAttributeValue(context: ParserContext) {
   let content
   let quote = context.source[0]
   let isQuoted = quote === `'` || quote === `"`
