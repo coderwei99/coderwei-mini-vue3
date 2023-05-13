@@ -10,6 +10,7 @@
  *
  */
 
+import { extend } from '@coderwei-mini-vue3/shared'
 import { NodeTypes } from './ast'
 
 // 定义开始标识符和结束标识符
@@ -20,6 +21,39 @@ const CLOSEDELIMITER = '}}'
 export enum TagTypes {
   TAGSSTART,
   TAGSEND
+}
+
+export const enum TextModes {
+  ATTRIBUTE_VALUE
+}
+
+interface OptionalOptions {
+  decodeEntities: (rawText: string) => string
+}
+export interface ParserContext {
+  options: OptionalOptions
+  source
+}
+
+// element元素
+export const enum ElementTypes {
+  ELEMENT,
+  COMPONENT,
+  SLOT,
+  TEMPLATE
+}
+
+const decodeRE = /&(gt|lt|amp|apos|quot);/g
+const decodeMap: Record<string, string> = {
+  gt: '>',
+  lt: '<',
+  amp: '&',
+  apos: "'",
+  quot: '"'
+}
+
+export const defaultParserOptions = {
+  decodeEntities: (rawText: string): string => rawText.replace(decodeRE, (_, p1) => decodeMap[p1])
 }
 
 export function baseParse(content: string) {
@@ -33,7 +67,7 @@ function isEnd(context, ancestors) {
   // 1. 当遇到结束标签 比如:</div>
   // 2. 当context.source.length === 0
   const s = context.source
-  console.log(ancestors)
+  // console.log(ancestors)
   if (s.startsWith('</')) {
     for (let i = 0; i < ancestors.length; i++) {
       const tag = ancestors[i].tag
@@ -99,9 +133,10 @@ function parseInterpolation(context) {
   }
 }
 
-function createParseContext(content: string) {
-  // throw new Error("Function not implemented.");
+function createParseContext(content: string): ParserContext {
+  const options = extend({}, defaultParserOptions)
   return {
+    options,
     source: content
   }
 }
@@ -118,17 +153,25 @@ function advanceBy(context: any, length: number) {
   context.source = context.source.slice(length)
 }
 
+// 推进多余的空格
+function advanceSpaces(context): void {
+  const match = /^[\t\r\n\f ]+/.exec(context.source)
+  if (match) {
+    advanceBy(context, match[0].length)
+  }
+}
+
 function parseElement(context: any, ancestors) {
   const element: any = parasTag(context, TagTypes.TAGSSTART) //处理开始标签
   ancestors.push(element)
   element.children = parseChildren(context, ancestors)
   ancestors.pop()
-  console.log(
-    context.source,
-    context.source.slice(2, 2 + element.tag.length),
-    element.tag,
-    '--------------------'
-  )
+  // console.log(
+  //   context.source,
+  //   context.source.slice(2, 2 + element.tag.length),
+  //   element.tag,
+  //   '--------------------'
+  // )
 
   if (context.source.slice(2, 2 + element.tag.length) == element.tag) {
     // 先判断结束标签是否和开始标签一致
@@ -143,20 +186,29 @@ function parseElement(context: any, ancestors) {
 }
 
 function parasTag(context: any, type: TagTypes) {
-  console.log(context.source)
-
+  // console.log(context.source)
   const match: any = /^<\/?([a-z]*)/i.exec(context.source)
-  console.log(match, '------------')
+  // console.log(match, '------------')
 
   advanceBy(context, match[0].length) //推进开始标签
+  advanceSpaces(context) //推进多余的空格
+
+  // 处理attributes
+  let props = parseAttributes(context, type)
+
   advanceBy(context, 1) //推进多余的>
 
   const tag = match[1]
 
   if (type == TagTypes.TAGSEND) return //如果是结束标签 就没必要返回内容了
+
+  let tagType = ElementTypes.ELEMENT
+  // TODO tagType 目前写死的ELEMENT  后续需要判断slot、 component、template
   return {
     type: NodeTypes.ELEMENT,
-    tag
+    props,
+    tag,
+    tagType
   }
 }
 
@@ -166,7 +218,7 @@ function parseText(context: any): any {
 
   for (let i = 0; i < endToken.length; i++) {
     const index = context.source.indexOf(endToken[i])
-    console.log(index, 'index')
+    // console.log(index, 'index')
     if (index !== -1 && endIndex > index) {
       endIndex = index
     }
@@ -179,5 +231,74 @@ function parseText(context: any): any {
   return {
     type: NodeTypes.TEXT,
     content
+  }
+}
+
+function parseAttributes(context: any, type: TagTypes) {
+  const props: any[] = []
+  const attributesName = new Set()
+
+  if (context.source.startsWith('>') || context.source.startsWith('/>')) return props
+  const attr = parseAttribute(context, attributesName)!
+  if (type === TagTypes.TAGSSTART) {
+    props.push(attr)
+  }
+  return props
+}
+function parseAttribute(context, nameSet) {
+  // 处理key
+  const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!
+  // 拿到=前面的部分
+  const name = match[0]
+  nameSet.add(name)
+
+  advanceBy(context, name.length)
+
+  // 处理value
+  let value
+  if (/^[\t\r\n\f]*=/.test(context.source)) {
+    // 该正则表示如果context.source是以0个或多个空白字符开头并且紧跟一个= 那么就是true
+    advanceSpaces(context)
+    advanceBy(context, 1) //推进'='
+    advanceSpaces(context)
+    value = parseAttributeValue(context)
+  }
+
+  // 处理v-for等指令
+  if (/^(v-[A-Za-z0-9-]|:|\.|@|#)/.test(name)) {
+    const match = /(?:^v-([a-z0-9-]+))?(?:(?::|^\.|^@|^#)(\[[^\]]+\]|[^\.]+))?(.+)?$/i.exec(name)!
+    let dirName = match[1]
+
+    return {
+      type: NodeTypes.DIRECTIVE,
+      name: dirName
+    }
+  }
+}
+
+function parseAttributeValue(context) {
+  let content
+  let quote = context.source[0]
+  let isQuoted = quote === `'` || quote === `"`
+  if (isQuoted) {
+    // 如果是以" 或者 ' 开头的
+    advanceBy(context, 1)
+    const endIndex = context.source.indexOf(quote)
+    if (endIndex !== -1) {
+      content = parseTextData(context, endIndex, TextModes.ATTRIBUTE_VALUE)
+      advanceBy(context, 1)
+    }
+  }
+  return {
+    content,
+    isQuoted
+  }
+}
+
+function parseTextData(context: ParserContext, endIndex, mode: TextModes) {
+  const rawText = context.source.slice(0, endIndex)
+  advanceBy(context, endIndex)
+  if (mode === TextModes.ATTRIBUTE_VALUE) {
+    return context.options.decodeEntities(rawText)
   }
 }

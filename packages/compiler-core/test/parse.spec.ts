@@ -90,4 +90,37 @@ describe('Parse', () => {
       baseParse('<div><span></div>')
     }).toThrow('没有结束标签')
   })
+
+  test.only('compiler v-for', () => {
+    const ast = baseParse("<div v-for='item in userInfoList'>{{item}}</div>")
+    const o = ast
+    // 期望最后解析的ast语法树对象
+    let expectAst = {
+      type: NodeTypes.ROOT,
+      children: [
+        {
+          type: NodeTypes.ELEMENT,
+          tag: 'div',
+          tagType: 0,
+          props: [
+            {
+              type: NodeTypes.DIRECTIVE,
+              name: 'for'
+            }
+          ],
+          children: [
+            {
+              type: NodeTypes.INTERPOLATION,
+              content: {
+                type: NodeTypes.SIMPLE_EXPRESSION,
+                content: 'item'
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+    expect(ast).toStrictEqual(expectAst)
+  })
 })
