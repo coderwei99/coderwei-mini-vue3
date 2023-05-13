@@ -162,7 +162,7 @@ function advanceSpaces(context): void {
 }
 
 function parseElement(context: any, ancestors) {
-  const element: any = parasTag(context, TagTypes.TAGSSTART) //处理开始标签
+  const element: any = parseTag(context, TagTypes.TAGSSTART) //处理开始标签
   ancestors.push(element)
   element.children = parseChildren(context, ancestors)
   ancestors.pop()
@@ -175,7 +175,7 @@ function parseElement(context: any, ancestors) {
 
   if (context.source.slice(2, 2 + element.tag.length) == element.tag) {
     // 先判断结束标签是否和开始标签一致
-    parasTag(context, TagTypes.TAGSEND) //处理结束标签
+    parseTag(context, TagTypes.TAGSEND) //处理结束标签
   } else {
     throw new Error('没有结束标签')
   }
@@ -185,7 +185,7 @@ function parseElement(context: any, ancestors) {
   return element
 }
 
-function parasTag(context: any, type: TagTypes) {
+function parseTag(context: any, type: TagTypes) {
   // console.log(context.source)
   const match: any = /^<\/?([a-z]*)/i.exec(context.source)
   // console.log(match, '------------')
