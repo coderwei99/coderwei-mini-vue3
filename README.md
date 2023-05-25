@@ -55,6 +55,9 @@
 - [x] 实现 computed 计算属性功能
 - [x] 实现 toRef 功能
 - [x] 实现 toRefs 功能
+- [ ] 实现 分支切换 功能
+- [x] 实现 cleanup 功能
+
 
 ### runtime-core 部分
 - [x] 实现初始化 component 主流程
