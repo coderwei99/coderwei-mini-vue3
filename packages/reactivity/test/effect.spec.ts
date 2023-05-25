@@ -93,4 +93,27 @@ describe('effect', () => {
     // 被调用1次
     expect(onStop).toBeCalledTimes(1)
   })
+
+  it('skip unnecessary update', () => {
+    // 在下面的例子,已经不需要在去触发依赖
+    let obj = reactive({
+      ok: true,
+      text: 'hello world'
+    })
+    let fn = vi.fn(() => {
+      dummy = obj.ok ? obj.text : 'not'
+    })
+    let dummy
+    effect(fn)
+
+    expect(fn).toBeCalledTimes(1) //第一次默认执行
+    expect(dummy).toBe('hello world')
+    obj.ok = false
+    expect(fn).toBeCalledTimes(2) // 当obj.ok发生变化  执行一次获取新值
+    expect(dummy).toBe('not')
+
+    // should not update 按道理来说 在obj.ok为false的情况下  无论obj.text如何发生变化  依赖都不应该会去重新执行  因为永远都不会去读取obj.text的值 所以不需要去触发依赖
+    obj.text = 'hi'
+    expect(fn).toBeCalledTimes(2) //这个时候 就不需要执行fn来获取最新的值了 因为没有意义
+  })
 })

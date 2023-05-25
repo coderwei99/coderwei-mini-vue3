@@ -12,6 +12,8 @@ export class EffectDepend {
     if (!this.active) {
       return this._fn()
     }
+    cleanup(this)
+
     activeEffect = this
     shouldTrack = true
     let returnValue = this._fn()
@@ -133,8 +135,21 @@ export function track(target, key) {
 export function trigger(target, key) {
   const depsMap = targetMap.get(target)
   const dep = depsMap?.get(key) //这里用可选运算符  因为没办法保证depsMap一定有对象
+
+  // 这个位置为什么要重新拷贝一份dep?
+  // 如果不进行拷贝 会导致死循环  因为我们在run方法内部调用的cleanup方法 会将当前的依赖进行删除 但是这个阶段我们还是添加新的依赖集合进来  [vue.js设计与实现]举了个通俗的例子
+  /* 
+  const set = new Set([1])
+  set.forEach(item => {
+    set.delete(1)
+    set.add(1)
+    console.log('遍历中') //会发现这个位置的打印会一直执行下去
+  })
+  
+  */
+  const currentDeps: Dep = new Set(dep)
   if (dep) {
-    triggerEffect(dep)
+    triggerEffect(currentDeps)
   }
 }
 
@@ -144,4 +159,12 @@ export function trigger(target, key) {
  */
 export function stop(runner) {
   runner.effect.stop()
+}
+
+// cleanup 移除无意义的依赖
+function cleanup(_effect) {
+  _effect.deps.forEach((effect) => {
+    effect.delete(_effect)
+  })
+  _effect.deps.length = 0
 }
