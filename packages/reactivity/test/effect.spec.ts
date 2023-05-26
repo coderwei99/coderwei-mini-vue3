@@ -116,4 +116,56 @@ describe('effect', () => {
     obj.text = 'hi'
     expect(fn).toBeCalledTimes(2) //这个时候 就不需要执行fn来获取最新的值了 因为没有意义
   })
+
+  // 嵌套的effect函数
+  /* 
+    为什么要考虑effect处于嵌套的情况?
+    这完全是由于vue的设计所造成的 可能这样说不太准确 换个角度说 是组件化就需要effect支持嵌套逻辑
+    举个例子
+      当我们的组件进行嵌套的情况下 vue在内部会进行组件的渲染 也就是说会执行组件的render函数 具体的表现形式类似入下
+      // Child.vue
+      const Child = {
+        name:'Child',
+        render(){
+          return h('div',{},'Child')
+        }
+      }
+      // App.vue
+      const App = {
+        name:'App',
+        render(){
+          return h('div',{},[h(Child)])
+        }
+      }
+
+      他们在渲染的时候会被实际上是在一个effet函数内部执行的 类似于下面这种
+      effect(()=>{
+        App.render()
+        effect(()=>{
+          Child.render()
+        })
+      )}
+    
+    这也是为什么要考虑effect嵌套的情况
+   */
+  it('nesting effect funtion', () => {
+    let obj = reactive({
+      temp1: 1,
+      temp2: 2
+    })
+
+    let temp1, temp2
+    effect(() => {
+      effect(() => {
+        temp2 = obj.temp2
+      })
+      temp1 = obj.temp1
+    })
+
+    expect(temp1).toBe(1)
+    expect(temp2).toBe(2)
+    obj.temp1 = 3
+    expect(temp1).toBe(3)
+    expect(temp2).toBe(2)
+  })
 })

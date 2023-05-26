@@ -56,6 +56,7 @@
 - [x] 实现 toRef 功能
 - [x] 实现 toRefs 功能
 - [x] 实现 cleanup功能 & 分支切换 功能 (避免无意义的更新 见/packages/reactivity/test/effect.spec.ts的skip unnecessary update测试)
+- [x] 实现 嵌套effect函数
 
 
 ### runtime-core 部分

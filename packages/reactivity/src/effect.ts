@@ -1,4 +1,6 @@
 let activeEffect
+// 在嵌套effect的情况下
+let effectStack: EffectDepend[] = []
 let shouldTrack: boolean = false
 export class EffectDepend {
   private _fn: Function
@@ -12,12 +14,16 @@ export class EffectDepend {
     if (!this.active) {
       return this._fn()
     }
+    let lastShouldTrack = shouldTrack
     cleanup(this)
 
     activeEffect = this
+    effectStack.push(this)
     shouldTrack = true
     let returnValue = this._fn()
-    shouldTrack = false
+    shouldTrack = lastShouldTrack
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
     return returnValue
   }
 
