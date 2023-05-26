@@ -11,8 +11,8 @@ import { isObject } from '@coderwei-mini-vue3/shared'
  * @returns
  */
 export function createGetter<T extends object>(isReadonly = false, isShallow = false) {
-  return function get(target: T, key: string | symbol) {
-    const res = Reflect.get(target, key)
+  return function get(target: T, key: string | symbol, receiver: object) {
+    const res = Reflect.get(target, key, receiver)
     if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly
     } else if (key === ReactiveFlags.IS_REACTIVE) {
@@ -37,8 +37,8 @@ export function createGetter<T extends object>(isReadonly = false, isShallow = f
 }
 
 export function createSetter<T extends object>() {
-  return function set(target: T, key: string | symbol, val: any) {
-    const res = Reflect.set(target, key, val)
+  return function set(target: T, key: string | symbol, val: any, receiver: object) {
+    const res = Reflect.set(target, key, val, receiver)
     trigger(target, key)
     return res
   }

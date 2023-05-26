@@ -168,4 +168,51 @@ describe('effect', () => {
     expect(temp1).toBe(3)
     expect(temp2).toBe(2)
   })
+
+  it('reflect on proxy', () => {
+    // 在谈论proxy的时候 都会说到reflect 总感觉这两个api是形影不离的 那是为何?
+    /* 
+      在这里不关心他们在别的场景下 是如何如何的 我们只关心在vue的响应式系统中 他们是如何配合的
+      先说总结: 其实就是在proxy的set操作中 通过reflect去触发依赖 至于为何  就是担心所谓的this指向的问题  可以看下面例子 我这里先做解释
+      1. 我们定义一个普通对象obj  但是同时还定义了一个访问器属性bar
+      2. 然后我们通过reactive去代理这个对象
+      3. 当我们在effect中去访问这个访问器属性的时候  会触发get操作  也就是说会收集依赖
+      ok,我们先不谈后面的事情 先搞清楚一个问题 我们使用effect去访问这个访问器属性的时候  收集依赖 到底应该收集谁呢? bar? foo? 我们仔细看看代码 先下结论 按照逻辑来说 foo和bar都应该被收集 dummy依赖于bar bar依赖于foo
+      不就相当于dummy依赖于foo? foo发生变化的时候 dummy理论上也需要发生变化 搞清楚这个我们再看下面
+      按照以往的逻辑来说  是做不到这一点的 为什么? 说白了就是bar中的这个this问题  他的this指向的谁?
+      function reactive(target){
+        return new Proxy(target,{
+          get(target,key,receiver){
+            track(target,key)
+            return target[key] 问题就出现在这里  当我们访问bar的时候  他的this指向的是obj  而不是proxy 所以我们无法去触发依赖
+          },
+          set(target,key,value,receiver){
+            const result = (target[key] = value)
+            trigger(target,key)
+            return result
+          } 
+        })
+      }
+    */
+    let obj = {
+      foo: 1,
+      get bar() {
+        return this.foo
+      },
+      set bar(value) {
+        this.foo = value
+      }
+    }
+    const user = reactive(obj)
+    let dummy
+    let fn = vi.fn(() => {
+      dummy = user.bar
+    })
+    effect(fn)
+    expect(fn).toBeCalledTimes(1)
+    expect(dummy).toBe(1)
+    user.foo = 2
+    expect(fn).toBeCalledTimes(2)
+    expect(dummy).toBe(2)
+  })
 })
