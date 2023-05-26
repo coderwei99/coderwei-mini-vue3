@@ -20,7 +20,9 @@ describe('Parse', () => {
       const ast = baseParse('<div></div>')
       expect(ast.children[0]).toStrictEqual({
         type: NodeTypes.ELEMENT,
+        props: [],
         tag: 'div',
+        tagType: 0,
         children: []
       })
     })
@@ -41,6 +43,8 @@ describe('Parse', () => {
     expect(ast.children[0]).toStrictEqual({
       type: NodeTypes.ELEMENT,
       tag: 'div',
+      props: [],
+      tagType: 0,
       children: [
         {
           type: NodeTypes.TEXT,
@@ -62,10 +66,14 @@ describe('Parse', () => {
     expect(ast.children[0]).toStrictEqual({
       type: NodeTypes.ELEMENT,
       tag: 'div',
+      props: [],
+      tagType: 0,
       children: [
         {
           type: NodeTypes.ELEMENT,
           tag: 'p',
+          props: [],
+          tagType: 0,
           children: [
             {
               type: NodeTypes.TEXT,
@@ -91,7 +99,7 @@ describe('Parse', () => {
     }).toThrow('没有结束标签')
   })
 
-  test.only('compiler v-for', () => {
+  test('compiler v-for', () => {
     const ast = baseParse("<div v-for='item in userInfoList'>{{item}}</div>")
     const o = ast
     // 期望最后解析的ast语法树对象
