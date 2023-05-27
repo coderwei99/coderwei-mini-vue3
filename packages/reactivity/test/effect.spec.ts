@@ -232,18 +232,27 @@ describe('effect', () => {
 
   it('for in with reactive', () => {
     // for in 也是不会触发get和set操作的  所以也需要在proxy中新增一个handler.ownKeys的操作
-    let obj = reactive({
+    interface Obj {
+      foo: 1
+      [key: string]: any
+    }
+    let obj: Obj = reactive({
       foo: 1
     })
+    let res: string[] = []
     let fn = vi.fn(() => {
       // 当调用for in 循环的时候 我们希望他也能够收集依赖 并且在响应式数据发生变化的时候 也能够触发依赖
+      res = []
       for (let key in obj) {
+        res.push(key)
         console.log(key)
       }
     })
     effect(fn)
     expect(fn).toBeCalledTimes(1)
-    obj.foo = 2
+    expect(res).toEqual(['foo'])
+    obj.bar = 2
     expect(fn).toBeCalledTimes(2)
+    expect(res).toEqual(['foo', 'bar'])
   })
 })
