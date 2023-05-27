@@ -38,6 +38,7 @@
 
 ### reactivity 部分
 - [x] 实现 effect & reactive 依赖收集和依赖触发
+- [x] 实现拦截in操作符(xx in obj  是不会触发get和set操作的 他会触发has操作 所以需要针对in操作符在proxy完善has拦截器)
 - [x] 实现 effect 返回 runner
 - [x] 实现 effect 的 scheduler 功能
 - [x] 实现 effect 的 stop 功能
