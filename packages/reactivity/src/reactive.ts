@@ -1,4 +1,4 @@
-import { track, trigger } from './effect'
+import { ITERATE_KEY, track, trigger } from './effect'
 
 import { createReactiveObject } from './baseHandlers'
 
@@ -51,17 +51,26 @@ export function createHas() {
   }
 }
 
+export function createOwnKeys() {
+  return function (target) {
+    track(target, ITERATE_KEY)
+    return Reflect.ownKeys(target)
+  }
+}
+
 // 执行一次createGetter/createSetter函数，避免每次调用一次
 const get = createGetter()
 const set = createSetter()
 const has = createHas()
+const ownKeys = createOwnKeys()
 const readonlyGet = createGetter(true)
 
 // reactive响应式对象的handle捕获器
 export const mutableHandlers: ProxyHandler<object> = {
   get,
   set,
-  has
+  has,
+  ownKeys
 }
 
 // readonly只读对象的handle捕获器

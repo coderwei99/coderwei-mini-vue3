@@ -2,6 +2,8 @@ let activeEffect
 // 在嵌套effect的情况下
 let effectStack: EffectDepend[] = []
 let shouldTrack: boolean = false
+export const ITERATE_KEY = Symbol('iterate')
+
 export class EffectDepend {
   private _fn: Function
   public active = true //effect是否存活
@@ -154,9 +156,13 @@ export function track(target, key) {
 export function trigger(target, key) {
   const depsMap = targetMap.get(target)
   const dep = depsMap?.get(key) //这里用可选运算符  因为没办法保证depsMap一定有对象
+  const iterateDeps = depsMap.get(ITERATE_KEY)
 
   if (dep) {
     triggerEffect(dep)
+  }
+  if (iterateDeps) {
+    triggerEffect(iterateDeps)
   }
 }
 
