@@ -233,7 +233,7 @@ describe('effect', () => {
   it('for in with reactive', () => {
     // for in 也是不会触发get和set操作的  所以也需要在proxy中新增一个handler.ownKeys的操作
     interface Obj {
-      foo: 1
+      foo: number
       [key: string]: any
     }
     let obj: Obj = reactive({
