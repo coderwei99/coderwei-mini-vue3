@@ -215,4 +215,18 @@ describe('effect', () => {
     expect(fn).toBeCalledTimes(2)
     expect(dummy).toBe(2)
   })
+
+  it('effect with in', () => {
+    // in 操作符 不会触发get和set操作 所以不会触发依赖  我们需要在proxy中新增一个handler.has的操作 就可以正常触发依赖了
+    let obj = reactive({
+      foo: 1
+    })
+    let fn = vi.fn(() => {
+      'foo' in obj
+    })
+    effect(fn)
+    expect(fn).toBeCalledTimes(1)
+    obj.foo = 2
+    expect(fn).toBeCalledTimes(2)
+  })
 })

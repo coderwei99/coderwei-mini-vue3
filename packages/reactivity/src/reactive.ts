@@ -44,15 +44,24 @@ export function createSetter<T extends object>() {
   }
 }
 
+export function createHas() {
+  return function (target, key) {
+    track(target, key)
+    return Reflect.has(target, key)
+  }
+}
+
 // 执行一次createGetter/createSetter函数，避免每次调用一次
 const get = createGetter()
 const set = createSetter()
+const has = createHas()
 const readonlyGet = createGetter(true)
 
 // reactive响应式对象的handle捕获器
 export const mutableHandlers: ProxyHandler<object> = {
   get,
-  set
+  set,
+  has
 }
 
 // readonly只读对象的handle捕获器
