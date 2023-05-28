@@ -321,4 +321,19 @@ describe('effect', () => {
     expect(dummy).toBe(2)
     expect(fn).toBeCalledTimes(2)
   })
+
+  it('proto object trigger effect', () => {
+    let proto = reactive({
+      foo: 1
+    })
+    let obj = reactive(Object.create(proto))
+    let dummy
+    let fn = vi.fn(() => {
+      dummy = obj.foo
+    })
+    effect(fn)
+    expect(fn).toBeCalledTimes(1)
+    obj.foo = 2
+    expect(fn).toBeCalledTimes(2)
+  })
 })
