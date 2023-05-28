@@ -170,20 +170,26 @@ export function trigger(target, key, type?, newVal?) {
     dep.forEach((effect) => {
       effectToRun.add(effect)
     })
-    // triggerEffect(dep)
   }
   if (iterateDeps && (type === TriggerType.ADD || type === TriggerType.DELETE)) {
     iterateDeps.forEach((effect) => {
       effectToRun.add(effect)
     })
-    // triggerEffect(iterateDeps)
   }
   // 触发数组length的依赖
   if (type === TriggerType.ADD && isArray(target)) {
+    const deps = depsMap.get('length')
+    deps &&
+      deps.forEach((effect) => {
+        effectToRun.add(effect)
+      })
+  }
+  if (key === 'length' && isArray(target)) {
     depsMap.forEach((effect, index) => {
       if (index >= newVal) {
-        // triggerEffect(effect)
-        effectToRun.add(effect)
+        effect.forEach((_effect) => {
+          effectToRun.add(_effect)
+        })
       }
     })
   }

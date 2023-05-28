@@ -66,7 +66,7 @@ export function createHas() {
 
 export function createOwnKeys() {
   return function (target) {
-    track(target, ITERATE_KEY)
+    track(target, isArray(target) ? 'length' : ITERATE_KEY)
     return Reflect.ownKeys(target)
   }
 }
