@@ -336,4 +336,22 @@ describe('effect', () => {
     obj.foo = 2
     expect(fn).toBeCalledTimes(2)
   })
+
+  // proxy Array
+  it('modify array length,effect legnth is trigger', () => {
+    // effect函数 依赖数组的legnth属性的时候 当我们修改数组长度 比如说新增一项 删除一项的时候 依赖也需要重新执行
+    const arr = reactive([1])
+    let dummy
+    let ret
+    effect(() => {
+      ret = arr[0]
+      dummy = arr.length
+    })
+    expect(dummy).toBe(1)
+    arr[1] = 2 //修改数组的长度 依赖应该会重新执行
+    expect(dummy).toBe(2)
+    expect(ret).toBe(1)
+    arr.length = 0
+    expect(ret).toBe(undefined)
+  })
 })
