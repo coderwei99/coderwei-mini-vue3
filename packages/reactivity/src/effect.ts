@@ -1,3 +1,5 @@
+import { isArray } from '@coderwei-mini-vue3/shared'
+
 let activeEffect
 // 在嵌套effect的情况下
 let effectStack: EffectDepend[] = []
@@ -168,6 +170,10 @@ export function trigger(target, key, type?) {
   }
   if (iterateDeps && (type === TriggerType.ADD || type === TriggerType.DELETE)) {
     triggerEffect(iterateDeps)
+  }
+  // 触发数组length的依赖
+  if (type === TriggerType.ADD && isArray(target)) {
+    triggerEffect(depsMap.get('length'))
   }
 }
 

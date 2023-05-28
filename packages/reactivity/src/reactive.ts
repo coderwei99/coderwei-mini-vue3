@@ -2,7 +2,7 @@ import { ITERATE_KEY, track, trigger, TriggerType } from './effect'
 
 import { createReactiveObject } from './baseHandlers'
 
-import { isObject } from '@coderwei-mini-vue3/shared'
+import { isArray, isObject } from '@coderwei-mini-vue3/shared'
 
 /**
  *
@@ -39,7 +39,11 @@ export function createGetter<T extends object>(isReadonly = false, isShallow = f
 export function createSetter<T extends object>() {
   return function set(target: T, key: string | symbol, val: any, receiver: object) {
     // 判断当前是新增属性还是修改属性
-    const type = Object.prototype.hasOwnProperty.call(target, key)
+    const type = isArray(target)
+      ? Number(key) < target.length
+        ? TriggerType.SET
+        : TriggerType.ADD
+      : Object.prototype.hasOwnProperty.call(target, key)
       ? TriggerType.SET
       : TriggerType.ADD
     let oldValue = target[key]
