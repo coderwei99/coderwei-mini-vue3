@@ -166,7 +166,7 @@ export function trigger(target, key, type?) {
   if (dep) {
     triggerEffect(dep)
   }
-  if ((iterateDeps && type === TriggerType.ADD) || type === TriggerType.DELETE) {
+  if (iterateDeps && (type === TriggerType.ADD || type === TriggerType.DELETE)) {
     triggerEffect(iterateDeps)
   }
 }
