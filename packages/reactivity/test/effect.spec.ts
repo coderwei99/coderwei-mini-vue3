@@ -354,4 +354,26 @@ describe('effect', () => {
     arr.length = 0
     expect(ret).toBe(undefined)
   })
+
+  it('set array length max effect length', () => {
+    // 只有当重新设置数组的长度大于依赖的index的时候 依赖才会重新执行 比如
+    /* 
+      let arr = reactive([1,2,3])
+      let dummy
+      effect(() =>{
+        dummy = arr[0]
+      })
+      arr.length = 1000
+      依赖需要重新执行吗? 这里明显不需要吧 所以我们很容易得出结论 当我们设置length属性的时候 只有这个length属性大于依赖的index的时候 依赖才会重新执行
+      */
+    let arr = reactive([1, 2, 3])
+    let dummy
+    let fn = vi.fn(() => {
+      dummy = arr[0]
+    })
+    effect(fn)
+    expect(fn).toBeCalledTimes(1)
+    arr.length = 1000 //依赖不应该重新执行
+    expect(fn).toBeCalledTimes(1)
+  })
 })
