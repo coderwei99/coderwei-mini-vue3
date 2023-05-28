@@ -1,4 +1,4 @@
-import { ITERATE_KEY, track, trigger } from './effect'
+import { ITERATE_KEY, track, trigger, TriggerType } from './effect'
 
 import { createReactiveObject } from './baseHandlers'
 
@@ -39,7 +39,9 @@ export function createGetter<T extends object>(isReadonly = false, isShallow = f
 export function createSetter<T extends object>() {
   return function set(target: T, key: string | symbol, val: any, receiver: object) {
     // 判断当前是新增属性还是修改属性
-    const type = Object.prototype.hasOwnProperty.call(target, key) ? 'set' : 'add'
+    const type = Object.prototype.hasOwnProperty.call(target, key)
+      ? TriggerType.SET
+      : TriggerType.ADD
     const res = Reflect.set(target, key, val, receiver)
     trigger(target, key, type)
     return res
@@ -60,11 +62,20 @@ export function createOwnKeys() {
   }
 }
 
+export function createDeleteProperty() {
+  return function (target, key) {
+    const res = Reflect.deleteProperty(target, key)
+    trigger(target, key, TriggerType.DELETE)
+    return res
+  }
+}
+
 // 执行一次createGetter/createSetter函数，避免每次调用一次
 const get = createGetter()
 const set = createSetter()
 const has = createHas()
 const ownKeys = createOwnKeys()
+const deleteProperty = createDeleteProperty()
 const readonlyGet = createGetter(true)
 
 // reactive响应式对象的handle捕获器
@@ -72,7 +83,8 @@ export const mutableHandlers: ProxyHandler<object> = {
   get,
   set,
   has,
-  ownKeys
+  ownKeys,
+  deleteProperty
 }
 
 // readonly只读对象的handle捕获器

@@ -5,7 +5,8 @@ let shouldTrack: boolean = false
 export const ITERATE_KEY = Symbol('iterate')
 export const enum TriggerType {
   ADD = 'add',
-  SET = 'set'
+  SET = 'set',
+  DELETE = 'delete'
 }
 
 export class EffectDepend {
@@ -123,7 +124,7 @@ export function isTracking() {
  * @param target 数据源对象
  * @param key 对应的key值
  */
-export function track(target, key, type?) {
+export function track(target, key) {
   // 首先拦截不必要的依赖
   if (!isTracking()) return
 
@@ -165,7 +166,7 @@ export function trigger(target, key, type?) {
   if (dep) {
     triggerEffect(dep)
   }
-  if (iterateDeps && type === TriggerType.ADD) {
+  if ((iterateDeps && type === TriggerType.ADD) || type === TriggerType.DELETE) {
     triggerEffect(iterateDeps)
   }
 }
