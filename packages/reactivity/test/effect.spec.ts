@@ -304,4 +304,18 @@ describe('effect', () => {
     expect(fn).toBeCalledTimes(2)
     expect(res).toEqual([])
   })
+
+  it('same value is not trigger effect', () => {
+    let obj = reactive({
+      foo: 1
+    })
+    let dummy
+    let fn = vi.fn(() => {
+      dummy = obj.foo
+    })
+    effect(fn)
+    expect(fn).toBeCalledTimes(1)
+    obj.foo = 1
+    expect(fn).toBeCalledTimes(1)
+  })
 })
