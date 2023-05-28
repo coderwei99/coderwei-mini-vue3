@@ -231,7 +231,30 @@ describe('effect', () => {
   })
 
   it('for in with reactive', () => {
-    // for in 也是不会触发get和set操作的  所以也需要在proxy中新增一个handler.ownKeys的操作
+    /* 
+    for in 也是不会触发get和set操作的  所以也需要在proxy中新增一个handler.ownKeys的操作
+    注意我说的是for in循环而已 在for in循环内部操作代理对象(修改属性或者添加属性)是会触发get和set操作的 
+    如果我们想的片面一点 其实都不需要去拦截for in拦截器 因为我们在使用for in的时候 一般都是在遍历对象的属性 
+    那么拦截for in 操作的意义在哪里?
+    ~~~typescript
+      let obj = reactive({
+        foo: 1
+      })
+      effect(()=>{
+        for(let key in obj){
+          console.log(key)
+        }
+      })
+      obj.bar = 2
+    ~~~
+    看上面demo 我们给响应式对象新增了一个属性 但是for in循环并没有重新执行 为什么? 很简单 effect内部的for in循环并没有收集依赖 因为我们添加了属性,for in循环就变成了两次 我们需要for in循环重新执行
+      那么我们该如何让他收集依赖呢?
+      很简单:上面说了for in循环会触发ownKeys拦截器 我们在这里做事情就好了
+    
+    但是上面demo还有一个性能问题 我们在新增属性 for in循环重新执行了 没问题  但是我如果修改呢? for in循环还是会重新执行 但是我们并不需要这样的效果 这就属于没意义的更新 我们需要for in循环重新执行 只是为了用户在for in循环
+    内部每次都能拿到正确数量的key罢了 修改的时候key的数量并不会发生变化 这个解决方案就更简单了 我们在set的时候判断一下 如果是新增属性 我们就不触发依赖 如果是修改属性 我们就触发依赖
+    */
+
     interface Obj {
       foo: number
       [key: string]: any
@@ -251,7 +274,7 @@ describe('effect', () => {
     effect(fn)
     expect(fn).toBeCalledTimes(1)
     expect(res).toEqual(['foo'])
-    obj.bar = 2
+    obj.bar = 2 //注意 我们是新增了一个属性  for in循环需要重新执行
     expect(fn).toBeCalledTimes(2)
     expect(res).toEqual(['foo', 'bar'])
   })
