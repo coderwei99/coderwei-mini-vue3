@@ -38,15 +38,16 @@
 
 ### reactivity 部分
 - [x] 实现 effect & reactive 依赖收集和依赖触发
-- [x] 实现拦截in操作符(xx in obj  是不会触发get和set操作的 他会触发has操作 所以需要针对in操作符在proxy完善has拦截器)
-- [x] 实现拦截for in 语句(for(let key in obj){your code...}  是不会触发get和set操作的 他会触发ownKeys操作 所以需要针对in操作符在proxy完善ownKeys拦截器)
+- [x] 实现拦截in操作符(xx in obj  是不会触发 get 和 set 操作的 他会触发 has 操作 所以需要针对in操作符在 proxy 完善 has 拦截器)
+- [x] 实现拦截 delete 操作符(delete obj.xxx  是不会触发 get 和 set 操作的 他会触发 deleteProperty 操作 所以需要针对 delete 操作符在 proxy 完善 deleteProperty 拦截器)
+- [x] 实现拦截 for in 语句(for(let key in obj){your code...}  是不会触发get和set操作的 他会触发 ownKeys 操作 所以需要针对 in 操作符在 proxy 完善 ownKeys 拦截器)
 - [x] 实现 effect 返回 runner
 - [x] 实现 effect 的 scheduler 功能
 - [x] 实现 effect 的 stop 功能
 - [x] 优化 stop 功能
 - [x] 实现 readonly 功能
 - [x] 实现 isReactive 和 isReadonly 功能
-- [x] readonly 和 reactive 嵌套对象功能
+- [x] 实现 readonly 和 reactive 嵌套对象功能
 - [x] 实现 shallowReadonly 功能
 - [x] 实现 shallowReactive 功能
 - [x] 实现 isProxy 功能
@@ -57,8 +58,8 @@
 - [x] 实现 computed 计算属性功能
 - [x] 实现 toRef 功能
 - [x] 实现 toRefs 功能
-- [x] 实现 cleanup功能 & 分支切换 功能 (避免无意义的更新 见/packages/reactivity/test/effect.spec.ts的skip unnecessary update测试)
-- [x] 实现 嵌套effect函数
+- [x] 实现 cleanup 功能 & 分支切换 功能 (避免无意义的更新 见/packages/reactivity/test/effect.spec.ts的skip unnecessary update测试)
+- [x] 实现嵌套 effect 函数
 
 
 ### runtime-core 部分
