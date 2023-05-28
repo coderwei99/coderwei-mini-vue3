@@ -43,7 +43,7 @@ export function createSetter<T extends object>() {
       ? TriggerType.SET
       : TriggerType.ADD
     const res = Reflect.set(target, key, val, receiver)
-    trigger(target, key, type)
+    if (target[key] !== val) trigger(target, key, type)
     return res
   }
 }
