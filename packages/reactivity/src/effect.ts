@@ -160,21 +160,35 @@ export function track(target, key) {
  * @param target 用户访问的对象
  * @param key 需要触发对应的key
  */
-export function trigger(target, key, type?) {
+export function trigger(target, key, type?, newVal?) {
   const depsMap = targetMap.get(target)
   const dep = depsMap?.get(key) //这里用可选运算符  因为没办法保证depsMap一定有对象
   const iterateDeps = depsMap.get(ITERATE_KEY)
 
+  const effectToRun = new Set<EffectDepend>()
   if (dep) {
-    triggerEffect(dep)
+    dep.forEach((effect) => {
+      effectToRun.add(effect)
+    })
+    // triggerEffect(dep)
   }
   if (iterateDeps && (type === TriggerType.ADD || type === TriggerType.DELETE)) {
-    triggerEffect(iterateDeps)
+    iterateDeps.forEach((effect) => {
+      effectToRun.add(effect)
+    })
+    // triggerEffect(iterateDeps)
   }
   // 触发数组length的依赖
   if (type === TriggerType.ADD && isArray(target)) {
-    triggerEffect(depsMap.get('length'))
+    depsMap.forEach((effect, index) => {
+      if (index >= newVal) {
+        // triggerEffect(effect)
+        effectToRun.add(effect)
+      }
+    })
   }
+
+  triggerEffect(effectToRun)
 }
 
 /**
