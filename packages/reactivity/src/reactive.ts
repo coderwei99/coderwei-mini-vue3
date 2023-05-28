@@ -44,8 +44,10 @@ export function createSetter<T extends object>() {
       : TriggerType.ADD
     let oldValue = target[key]
     const res = Reflect.set(target, key, val, receiver)
-    // 排除NaN的情况
-    if (oldValue !== val && (oldValue === oldValue || val === val)) trigger(target, key, type)
+    if (receiver[ReactiveFlags.IS_RAW] === target) {
+      // 排除NaN的情况
+      if (oldValue !== val && (oldValue === oldValue || val === val)) trigger(target, key, type)
+    }
     return res
   }
 }
