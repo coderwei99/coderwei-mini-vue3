@@ -42,8 +42,10 @@ export function createSetter<T extends object>() {
     const type = Object.prototype.hasOwnProperty.call(target, key)
       ? TriggerType.SET
       : TriggerType.ADD
+    let oldValue = target[key]
     const res = Reflect.set(target, key, val, receiver)
-    if (target[key] !== val) trigger(target, key, type)
+    // 排除NaN的情况
+    if (oldValue !== val && (oldValue === oldValue || val === val)) trigger(target, key, type)
     return res
   }
 }
