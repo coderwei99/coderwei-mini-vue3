@@ -163,7 +163,7 @@ export function track(target, key) {
 export function trigger(target, key, type?, newVal?) {
   const depsMap = targetMap.get(target)
   const dep = depsMap?.get(key) //这里用可选运算符  因为没办法保证depsMap一定有对象
-  const iterateDeps = depsMap.get(ITERATE_KEY)
+  const iterateDeps = depsMap?.get(ITERATE_KEY)
 
   const effectToRun = new Set<EffectDepend>()
   if (dep) {
