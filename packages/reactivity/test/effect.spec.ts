@@ -307,15 +307,18 @@ describe('effect', () => {
 
   it('same value is not trigger effect', () => {
     let obj = reactive({
-      foo: 1
+      foo: 1,
+      bar: NaN
     })
     let dummy
     let fn = vi.fn(() => {
-      dummy = obj.foo
+      dummy = obj.bar
     })
     effect(fn)
     expect(fn).toBeCalledTimes(1)
-    obj.foo = 1
-    expect(fn).toBeCalledTimes(1)
+    // obj.foo = 1
+    obj.bar = 2
+    expect(dummy).toBe(2)
+    expect(fn).toBeCalledTimes(2)
   })
 })
