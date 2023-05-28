@@ -376,4 +376,21 @@ describe('effect', () => {
     arr.length = 1000 //依赖不应该重新执行
     expect(fn).toBeCalledTimes(1)
   })
+
+  it('for in with array', () => {
+    let arr = reactive([1, 2, 3])
+    let dummy: string[] = []
+    effect(() => {
+      dummy = []
+      for (const key in arr) {
+        dummy.push(key)
+      }
+    })
+
+    expect(dummy).toEqual(['0', '1', '2'])
+    arr[3] = 4
+    expect(dummy).toEqual(['0', '1', '2', '3'])
+    arr.length = 0
+    expect(dummy).toEqual([])
+  })
 })
