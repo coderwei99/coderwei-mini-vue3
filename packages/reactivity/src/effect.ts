@@ -3,6 +3,10 @@ let activeEffect
 let effectStack: EffectDepend[] = []
 let shouldTrack: boolean = false
 export const ITERATE_KEY = Symbol('iterate')
+export const enum TriggerType {
+  ADD = 'add',
+  SET = 'set'
+}
 
 export class EffectDepend {
   private _fn: Function
@@ -119,7 +123,7 @@ export function isTracking() {
  * @param target 数据源对象
  * @param key 对应的key值
  */
-export function track(target, key) {
+export function track(target, key, type?) {
   // 首先拦截不必要的依赖
   if (!isTracking()) return
 
@@ -153,7 +157,7 @@ export function track(target, key) {
  * @param target 用户访问的对象
  * @param key 需要触发对应的key
  */
-export function trigger(target, key) {
+export function trigger(target, key, type?) {
   const depsMap = targetMap.get(target)
   const dep = depsMap?.get(key) //这里用可选运算符  因为没办法保证depsMap一定有对象
   const iterateDeps = depsMap.get(ITERATE_KEY)
@@ -161,7 +165,7 @@ export function trigger(target, key) {
   if (dep) {
     triggerEffect(dep)
   }
-  if (iterateDeps) {
+  if (iterateDeps && type === TriggerType.ADD) {
     triggerEffect(iterateDeps)
   }
 }

@@ -38,8 +38,10 @@ export function createGetter<T extends object>(isReadonly = false, isShallow = f
 
 export function createSetter<T extends object>() {
   return function set(target: T, key: string | symbol, val: any, receiver: object) {
+    // 判断当前是新增属性还是修改属性
+    const type = Object.prototype.hasOwnProperty.call(target, key) ? 'set' : 'add'
     const res = Reflect.set(target, key, val, receiver)
-    trigger(target, key)
+    trigger(target, key, type)
     return res
   }
 }
