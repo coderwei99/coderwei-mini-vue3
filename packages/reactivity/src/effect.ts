@@ -1,4 +1,4 @@
-import { isArray } from '@coderwei-mini-vue3/shared'
+import { isArray, toRawType } from '@coderwei-mini-vue3/shared'
 
 let activeEffect
 // 在嵌套effect的情况下
@@ -172,7 +172,12 @@ export function trigger(target, key, type?: TriggerType, newVal?) {
       effectToRun.add(effect)
     })
   }
-  if (iterateDeps && (type === TriggerType.ADD || type === TriggerType.DELETE)) {
+  if (
+    iterateDeps &&
+    (type === TriggerType.ADD ||
+      type === TriggerType.DELETE ||
+      (toRawType(target) === 'Map' && type === TriggerType.SET))
+  ) {
     iterateDeps.forEach((effect) => {
       effectToRun.add(effect)
     })

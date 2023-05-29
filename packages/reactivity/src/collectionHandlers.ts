@@ -33,16 +33,25 @@ const mutableInstrumentations = {
   set(key, value) {
     const target = this[ReactiveFlags.IS_RAW]
     const hasKey = target.has(key)
+    const oldVal = target.get(key)
     const rawVal = value[ReactiveFlags.IS_RAW] || value
     target.set(key, rawVal)
-    if (hasKey) {
-      // 如果key存在 说明是修改操作
-      trigger(target, key, TriggerType.SET, value)
-    } else {
+    if (!hasKey) {
       // 不存在是新增操作 新增会影响size属性的 要触发size的依赖
       trigger(target, key, TriggerType.ADD, value)
+    } else if (value !== oldVal || (value !== value && oldVal !== oldVal)) {
+      // 如果key存在 说明是修改操作
+      trigger(target, key, TriggerType.SET, value)
     }
     return this
+  },
+  forEach(callback, thisArg) {
+    const wrap = (val) => (typeof val === 'object' ? reactive(val) : val)
+    const target = this[ReactiveFlags.IS_RAW]
+    track(target, ITERATE_KEY)
+    target.forEach((v, k) => {
+      callback.call(thisArg, wrap(v), wrap(k), this)
+    })
   }
 }
 
