@@ -4,6 +4,7 @@ let activeEffect
 // 在嵌套effect的情况下
 let effectStack: EffectDepend[] = []
 let shouldTrack: boolean = false
+let trackStack: boolean[] = []
 export const ITERATE_KEY = Symbol('iterate')
 export const enum TriggerType {
   ADD = 'add',
@@ -211,4 +212,16 @@ function cleanup(_effect) {
     effect.delete(_effect)
   })
   _effect.deps.length = 0
+}
+
+// 暂停收集依赖
+export function pauseTracking() {
+  trackStack.push(shouldTrack)
+  shouldTrack = false
+}
+
+// 恢复收集依赖 (注意这里用的是恢复 不是直接设置成true 设置成true还是false要根据之前的状态来决定)
+export function enableTracking() {
+  const res = trackStack.pop()
+  shouldTrack = res === undefined ? true : res
 }
