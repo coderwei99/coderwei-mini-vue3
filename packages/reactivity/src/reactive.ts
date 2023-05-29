@@ -1,8 +1,9 @@
 import { ITERATE_KEY, track, trigger, TriggerType } from './effect'
 
-import { arrayInstrumentations, createReactiveObject } from './baseHandlers'
+import { arrayInstrumentations } from './baseHandlers'
+import { mutableCollectionHandlers } from './collectionHandlers'
 
-import { isArray, isObject } from '@coderwei-mini-vue3/shared'
+import { isArray, isObject, toRawType } from '@coderwei-mini-vue3/shared'
 
 /**
  *
@@ -194,4 +195,38 @@ export const shallowReactiveHandlers: ProxyHandler<Object> = {
 // shallowReactive的实现
 export function shallowReactive<T extends object>(value: T) {
   return createReactiveObject(value, shallowReactiveHandlers)
+}
+
+export const enum TargetType {
+  INVALID = 0, //无效
+  COMMON = 1, // 普通对象 object / array
+  COLLECTION = 2 // 集合对象 set / map / weakmap / weakset
+}
+
+export function targetTypeMap(value: string) {
+  switch (value) {
+    case 'Object':
+    case 'Array':
+      return TargetType.COMMON
+    case 'Map':
+    case 'Set':
+    case 'WeakMap':
+    case 'WeakSet':
+      return TargetType.COLLECTION
+    default:
+      return TargetType.INVALID
+  }
+}
+
+export function getTargetType(value: ITarget): TargetType {
+  return Object.isExtensible(value) ? targetTypeMap(toRawType(value)) : TargetType.INVALID
+}
+
+function createReactiveObject<T extends object>(target: T, handlers) {
+  // 区分 对象数组和集合对象 不同的对象需要使用不同的handlers
+  const targetType = getTargetType(target)
+  return new Proxy(
+    target,
+    targetType === TargetType.COLLECTION ? mutableCollectionHandlers : handlers
+  )
 }

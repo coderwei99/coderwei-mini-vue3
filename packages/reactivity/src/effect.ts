@@ -161,7 +161,7 @@ export function track(target, key) {
  * @param target 用户访问的对象
  * @param key 需要触发对应的key
  */
-export function trigger(target, key, type?, newVal?) {
+export function trigger(target, key, type?: TriggerType, newVal?) {
   const depsMap = targetMap.get(target)
   const dep = depsMap?.get(key) //这里用可选运算符  因为没办法保证depsMap一定有对象
   const iterateDeps = depsMap?.get(ITERATE_KEY)
