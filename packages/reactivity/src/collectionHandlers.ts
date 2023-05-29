@@ -14,8 +14,12 @@ const mutableInstrumentations = {
   },
   delete(key) {
     const target = this[ReactiveFlags.IS_RAW]
+    const hasKey = target.has(key)
     const res = target.delete(key)
-    trigger(target, key, TriggerType.DELETE)
+    //只有存在这个key的时候再去触发依赖  开发者随便删除一个不存在的元素 是不需要触发依赖的
+    if (hasKey) {
+      trigger(target, key, TriggerType.DELETE)
+    }
     return res
   }
 }
