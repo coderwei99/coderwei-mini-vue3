@@ -10,13 +10,14 @@ export function createReactiveObject<T extends object>(target: T, handlers) {
   return new Proxy(target, handlers)
 }
 
-export const arrayInstrumentations = {
-  includes: function (...args: any) {
-    const originalIncludes = Array.prototype['includes']
+export const arrayInstrumentations = {}
+;['includes', 'indexOf', 'lastIndexOf'].forEach((key: string) => {
+  arrayInstrumentations[key] = function (...args: any) {
+    const originalIncludes = Array.prototype[key]
     let res = originalIncludes.apply(this, args)
-    if (!res) {
-      res = originalIncludes.apply(this[ReactiveFlags.IS_RAW], args)
+    if (!res || res === -1) {
+      res = originalIncludes.apply(this![ReactiveFlags.IS_RAW], args)
     }
     return res
   }
-}
+})
