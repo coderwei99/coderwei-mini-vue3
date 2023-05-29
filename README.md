@@ -44,6 +44,7 @@
 - [x] 屏蔽由于原型引起的无意义更新
 - [x] 实现数组 for in 循环的依赖收集与触发 && length 属性的依赖收集与触发
 - [x] 重写 array 的 includes & indexOf & lastIndexOf 方法
+- [x] 重写 array 的 push & pop & shift & unshift & splice 方法
 - [x] 实现 effect 返回 runner
 - [x] 实现 effect 的 scheduler 功能
 - [x] 实现 effect 的 stop 功能
