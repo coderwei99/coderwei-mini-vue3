@@ -477,5 +477,7 @@ describe('effect', () => {
     expect(dummy).toBe(3)
     set.add(4) //添加相同的项 不会触发依赖
     expect(fn).toBeCalledTimes(3)
+    set.delete(999) //删除一个不存在的项 不会触发依赖
+    expect(fn).toBeCalledTimes(3)
   })
 })
