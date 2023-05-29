@@ -480,4 +480,28 @@ describe('effect', () => {
     set.delete(999) //删除一个不存在的项 不会触发依赖
     expect(fn).toBeCalledTimes(3)
   })
+
+  // Map
+  it('Map reactive', () => {
+    const map = reactive(new Map([['foo', 1]]))
+    let dummy
+    effect(() => {
+      dummy = map.get('foo')
+    })
+    expect(dummy).toBe(1)
+    map.set('foo', 2)
+    expect(dummy).toBe(2)
+
+    const m = new Map()
+    const map1 = reactive(m)
+    const p2 = reactive(new Map())
+    map1.set('p2', p2)
+    let dummy1
+    let fn = vi.fn(() => {
+      dummy1 = m.get('p2').size
+    })
+    effect(fn)
+    m.get('p2').set('k', 99) //通过原始数据 不应该触发依赖 [vuejs的设计与实现]中 p140 提到了这个问题(避免污染原始数据)
+    expect(fn).toBeCalledTimes(1)
+  })
 })
