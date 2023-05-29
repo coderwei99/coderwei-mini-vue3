@@ -408,6 +408,16 @@ describe('effect', () => {
   })
 
   it('array include function with Object', () => {
+    /* 
+      这里做个简单的解释: 我们知道我的proxy在get的时候 会判断值是不是一个对象 如果是一个对象的话 会对这个对象再次进行reactive操作 于是就有一个问题
+      arr[0] !== arr[0] 为什么呢? 因为我们在每次访问下标为0的项都会触发get 于是每次都会返回一个新的proxy对象 问题就出现在下面这部分代码
+      if (isObject(res) && !isShallow) {
+        return isReadonly ? readonly(res) : reactive(res)
+      }
+
+      解决方案: 
+      我们在reactive函数中加入一个判断 判断当前对象是否被代理过 如果被代理过的话 就不需要再次代理了 反之则需要代理 然后将其存起来
+     */
     let obj = { foo: 1 }
     let arr = reactive([obj])
     let ret = arr.includes(arr[0])
