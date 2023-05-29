@@ -64,3 +64,12 @@ export const invokeArrayFns = (fns, ...arg) => {
     fns[i](...arg)
   }
 }
+
+export const objectToString = Object.prototype.toString
+export const toTypeString = (value: unknown): string => {
+  return objectToString.call(value)
+}
+export const toRawType = (value: unknown): string => {
+  // [object String] // 只要String 这部分
+  return toTypeString(value).slice(8, -1)
+}
