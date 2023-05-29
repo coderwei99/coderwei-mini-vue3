@@ -421,6 +421,9 @@ describe('effect', () => {
     let obj = { foo: 1 }
     let arr = reactive([obj])
     let ret = arr.includes(arr[0])
+    // 重写includes方法 因为我们arr数组中的项是一个proxy对象 而includes方法是根据值来判断的 所以我们需要重写这个方法 开发者拿着obj对象来判断是否在arr数组中 也是正常的
+    let ret1 = arr.includes(obj)
     expect(ret).toBe(true)
+    expect(ret1).toBe(true)
   })
 })
