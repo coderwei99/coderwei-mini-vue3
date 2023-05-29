@@ -1,5 +1,6 @@
+import { isObject } from '@coderwei-mini-vue3/shared'
 import { enableTracking, ITERATE_KEY, pauseTracking, track, trigger, TriggerType } from './effect'
-import { ReactiveFlags } from './reactive'
+import { reactive, ReactiveFlags } from './reactive'
 
 const mutableInstrumentations = {
   add(key) {
@@ -21,6 +22,27 @@ const mutableInstrumentations = {
       trigger(target, key, TriggerType.DELETE)
     }
     return res
+  },
+  // Map function
+  get(key) {
+    const target = this[ReactiveFlags.IS_RAW]
+    const res = target.get(key)
+    track(target, key)
+    return isObject(res) ? reactive(res) : res
+  },
+  set(key, value) {
+    const target = this[ReactiveFlags.IS_RAW]
+    const hasKey = target.has(key)
+    const rawVal = value[ReactiveFlags.IS_RAW] || value
+    target.set(key, rawVal)
+    if (hasKey) {
+      // 如果key存在 说明是修改操作
+      trigger(target, key, TriggerType.SET, value)
+    } else {
+      // 不存在是新增操作 新增会影响size属性的 要触发size的依赖
+      trigger(target, key, TriggerType.ADD, value)
+    }
+    return this
   }
 }
 
