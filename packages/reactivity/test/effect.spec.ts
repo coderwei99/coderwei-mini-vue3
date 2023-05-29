@@ -461,4 +461,21 @@ describe('effect', () => {
     arr.shift()
     expect(dummy).toBe(3)
   })
+
+  //  Set
+  it('Set reactive', () => {
+    const set = reactive(new Set([1, 2, 3]))
+    let dummy
+    let fn = vi.fn(() => {
+      dummy = set.size
+    })
+    effect(fn)
+    expect(dummy).toBe(3)
+    set.add(4)
+    expect(dummy).toBe(4)
+    set.delete(1)
+    expect(dummy).toBe(3)
+    set.add(4) //添加相同的项 不会触发依赖
+    expect(fn).toBeCalledTimes(3)
+  })
 })
