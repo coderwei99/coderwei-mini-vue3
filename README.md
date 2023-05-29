@@ -37,14 +37,14 @@
 ## 🛠 功能清单
 
 ### reactivity 部分
-#### 响应式系统发方案
+#### 响应式系统的实现
 - [x] 实现 computed 计算属性功能
 - [x] 实现 cleanup 功能 & 分支切换 功能 (避免无意义的更新 见/packages/reactivity/test/effect.spec.ts的skip unnecessary update测试)
 
 #### effect
 - [x] 实现 effect 依赖收集和依赖触发
 - [x] 实现 effect 返回 runner
-- [x] 实现 effect 的 scheduler 功能
+- [x] 实现 effect 的 scheduler 功能(调度执行)
 - [x] 实现 effect 的 stop 功能
 - [x] 优化 stop 功能
 - [x] 实现嵌套 effect 函数
