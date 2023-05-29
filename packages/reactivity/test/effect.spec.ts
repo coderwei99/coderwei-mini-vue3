@@ -393,4 +393,24 @@ describe('effect', () => {
     arr.length = 0
     expect(dummy).toEqual([])
   })
+
+  // array functions
+  it('array include function with Seven data types that are primitives', () => {
+    let arr = reactive([1, 2, 3])
+    let dummy
+    let fn = vi.fn(() => {
+      dummy = arr.includes(4)
+    })
+    effect(fn)
+    expect(dummy).toBe(false)
+    arr[3] = 4
+    expect(dummy).toBe(true)
+  })
+
+  it('array include function with Object', () => {
+    let obj = { foo: 1 }
+    let arr = reactive([obj])
+    let ret = arr.includes(arr[0])
+    expect(ret).toBe(true)
+  })
 })
