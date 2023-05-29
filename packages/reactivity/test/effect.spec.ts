@@ -504,4 +504,35 @@ describe('effect', () => {
     m.get('p2').set('k', 99) //通过原始数据 不应该触发依赖 [vuejs的设计与实现]中 p140 提到了这个问题(避免污染原始数据)
     expect(fn).toBeCalledTimes(1)
   })
+
+  it('Map with forEach', () => {
+    const s = new Set([1, 2])
+    const m = new Map([['s', s]])
+    const map = reactive(m)
+    let dummy
+    let fn = vi.fn(() => {
+      map.forEach((value, key) => {
+        dummy = value.size
+      })
+    })
+    effect(fn)
+    expect(dummy).toBe(2)
+    map.get('s').add(3)
+    expect(dummy).toBe(3)
+  })
+
+  it('Map with forEach set same key', () => {
+    const map = reactive(new Map([['foo', 1]]))
+    let dummy
+    const fn = vi.fn(() => {
+      map.forEach((value, key) => {
+        dummy = value
+      })
+    })
+    effect(fn)
+    expect(fn).toBeCalledTimes(1)
+    map.set('foo', 1)
+    expect(fn).toBeCalledTimes(1)
+    expect(dummy).toBe(1)
+  })
 })
