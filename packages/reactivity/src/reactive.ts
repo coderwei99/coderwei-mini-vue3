@@ -106,9 +106,17 @@ export const readonlyHandlers: ProxyHandler<object> = {
   }
 }
 
+// 创建代理印射 如果同一个对象已经创建过了 不需要再次创建
+let proxyMap = new WeakMap()
+
 // reactive 对象
 export function reactive<T extends object>(raw: T) {
-  return createReactiveObject<T>(raw, mutableHandlers)
+  // 如果是一个只读对象或者是一个响应式对象，直接返回
+  const exitProxy = proxyMap.get(raw)
+  if (exitProxy) return exitProxy
+  const p = createReactiveObject<T>(raw, mutableHandlers)
+  proxyMap.set(raw, p)
+  return p
 }
 
 //readonly对象
