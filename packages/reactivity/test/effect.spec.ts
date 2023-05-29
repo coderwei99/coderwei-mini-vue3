@@ -426,4 +426,17 @@ describe('effect', () => {
     expect(ret).toBe(true)
     expect(ret1).toBe(true)
   })
+
+  it('array indexOf function and lastIndexOf', () => {
+    let obj = {}
+    let arr = reactive([1, 2, obj])
+    let i = arr.indexOf(obj)
+    let j = arr.lastIndexOf(obj)
+    let k = arr.indexOf(arr[0])
+    let l = arr.lastIndexOf(arr[2])
+    expect(i).toBe(2)
+    expect(j).toBe(2)
+    expect(k).toBe(0)
+    expect(l).toBe(2)
+  })
 })
