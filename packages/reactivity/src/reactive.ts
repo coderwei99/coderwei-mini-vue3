@@ -1,6 +1,6 @@
 import { ITERATE_KEY, track, trigger, TriggerType } from './effect'
 
-import { createReactiveObject } from './baseHandlers'
+import { arrayInstrumentations, createReactiveObject } from './baseHandlers'
 
 import { isArray, isObject } from '@coderwei-mini-vue3/shared'
 
@@ -26,6 +26,10 @@ export function createGetter<T extends object>(isReadonly = false, isShallow = f
     // 只读对象不需要收集依赖
     if (!isReadonly) {
       track(target, key)
+    }
+
+    if (isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+      return Reflect.get(arrayInstrumentations, key, receiver)
     }
 
     //  判断是否为嵌套对象 如果是嵌套对象并且isShallow为默认值false  根据isReadonly判断递归调用readonly还是reactive
