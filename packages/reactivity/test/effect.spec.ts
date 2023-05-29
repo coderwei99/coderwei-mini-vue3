@@ -439,4 +439,26 @@ describe('effect', () => {
     expect(k).toBe(0)
     expect(l).toBe(2)
   })
+
+  it('array push pop shift unshift splice function', () => {
+    let arr = reactive([1, 2, 3])
+    let dummy
+    let fn = vi.fn(() => {
+      dummy = arr[0]
+    })
+    effect(() => {
+      arr.push(4)
+    })
+    effect(() => {
+      arr.push(5)
+    })
+    expect(arr).toEqual([1, 2, 3, 4, 5])
+    effect(fn)
+    arr.pop()
+    expect(dummy).toBe(1)
+    arr.shift()
+    expect(dummy).toBe(2)
+    arr.shift()
+    expect(dummy).toBe(3)
+  })
 })
