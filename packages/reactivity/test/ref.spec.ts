@@ -115,4 +115,14 @@ describe('reactive', () => {
     expect(obj.age).toBe(19)
     expect(dummy).toBe(19)
   })
+
+  it('reactive has key is ref', () => {
+    const foo = ref(1)
+    const obj = reactive({
+      foo
+    })
+    const res = obj.foo
+
+    expect(obj.foo).toBe(1)
+  })
 })
