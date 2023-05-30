@@ -1,6 +1,7 @@
 import { reactive } from '../src/reactive'
 import { effect, stop } from '../src/effect'
 import { vi } from 'vitest'
+import { isObject } from '@coderwei-mini-vue3/shared'
 
 describe('effect', () => {
   it('happy path', () => {
@@ -534,5 +535,188 @@ describe('effect', () => {
     map.set('foo', 1)
     expect(fn).toBeCalledTimes(1)
     expect(dummy).toBe(1)
+  })
+
+  it('Map or Set iterate', () => {
+    // Map
+    let obj = reactive({
+      foo: 1
+    })
+    const map = reactive(new Map([['foo', obj]]))
+    let arr: string[] = []
+    let dummy
+    effect(() => {
+      for (const [key, value] of map) {
+        arr.push(key)
+        dummy = value.foo
+      }
+    })
+    expect(arr).toEqual(['foo'])
+    expect(dummy).toBe(1)
+    map.get('foo').foo = 2
+    expect(dummy).toBe(2)
+
+    // Set
+    let set = new Set([1, 2, 3, reactive({ foo: 1 })])
+    let setArr: number[] = []
+    let setDummy
+    effect(() => {
+      for (const item of set) {
+        setArr.push(item)
+        if (isObject(item)) {
+          setDummy = item.foo
+        }
+      }
+    })
+    expect(setArr).toEqual([1, 2, 3, { foo: 1 }])
+    expect(setDummy).toBe(1)
+    set.forEach((item) => {
+      if (isObject(item)) {
+        item.foo = 2
+      }
+    })
+    expect(setDummy).toBe(2)
+  })
+
+  it('Map or Set entries', () => {
+    let obj = reactive({
+      foo: 1
+    })
+    const map = reactive(new Map([['foo', obj]]))
+    let arr: string[] = []
+    let dummy
+    effect(() => {
+      for (const [key, value] of map.entries()) {
+        arr.push(key)
+        dummy = value.foo
+      }
+    })
+    expect(arr).toEqual(['foo'])
+    expect(dummy).toBe(1)
+    map.get('foo').foo = 2
+    expect(dummy).toBe(2)
+
+    // Set entries是返回[value, value]的数组 因为Set没有key这个属性
+    let set = new Set([1, 2, 3, reactive({ foo: 1 })])
+    let setArr: any[][] = []
+    let setDummy
+    effect(() => {
+      for (const item of set.entries()) {
+        setArr.push(item)
+        if (isObject(item)) {
+          setDummy = item[0].foo
+        }
+      }
+    })
+    expect(setArr).toEqual([
+      [1, 1],
+      [2, 2],
+      [3, 3],
+      [{ foo: 1 }, { foo: 1 }]
+    ])
+    expect(setDummy).toBe(1)
+    set.forEach((item) => {
+      if (isObject(item)) {
+        item.foo = 2
+      }
+    })
+    expect(setDummy).toBe(2)
+  })
+
+  // values
+  it('Map or Set values', () => {
+    let obj = reactive({
+      foo: 1
+    })
+    const map = reactive(new Map([['foo', obj]]))
+    let arr: string[] = []
+    let dummy
+    effect(() => {
+      for (const value of map.values()) {
+        arr.push(value.foo)
+        dummy = value.foo
+      }
+    })
+    expect(arr).toEqual([1])
+    expect(dummy).toBe(1)
+    map.get('foo').foo = 2
+    expect(dummy).toBe(2)
+
+    // Set values是返回value的数组
+    let set = new Set([1, 2, 3, reactive({ foo: 1 })])
+    let setArr: any[] = []
+    let setDummy
+    effect(() => {
+      for (const item of set.values()) {
+        setArr.push(item)
+        if (isObject(item)) {
+          setDummy = item.foo
+        }
+      }
+    })
+    expect(setArr).toEqual([1, 2, 3, { foo: 1 }])
+    expect(setDummy).toBe(1)
+    set.forEach((item) => {
+      if (isObject(item)) {
+        item.foo = 2
+      }
+    })
+    expect(setDummy).toBe(2)
+  })
+
+  // keys
+  it('Map or Set keys', () => {
+    let obj = reactive({
+      foo: 1
+    })
+    const map = reactive(new Map([['foo', obj]]))
+    let arr: string[] = []
+    let dummy
+    effect(() => {
+      for (const key of map.keys()) {
+        arr.push(key)
+        dummy = map.get(key).foo
+      }
+    })
+    expect(arr).toEqual(['foo'])
+    expect(dummy).toBe(1)
+    map.get('foo').foo = 2
+    expect(dummy).toBe(2)
+
+    // Set keys是返回value的数组
+    let set = new Set([1, 2, 3, reactive({ foo: 1 })])
+    let setArr: any[] = []
+    let setDummy
+    effect(() => {
+      for (const item of set.keys()) {
+        setArr.push(item)
+        if (isObject(item)) {
+          setDummy = item.foo
+        }
+      }
+    })
+    expect(setArr).toEqual([1, 2, 3, { foo: 1 }])
+    expect(setDummy).toBe(1)
+    set.forEach((item) => {
+      if (isObject(item)) {
+        item.foo = 2
+      }
+    })
+    expect(setDummy).toBe(2)
+  })
+
+  // 性能优化
+  it('call map keys should not to be call effect ', () => {
+    // 当调用keys迭代器且设置的新属性是重复的key的时候 不应该触发依赖 keys拿到的全是key 对key的操作并不会造成副作用
+    let notCallMap = reactive(new Map([['foo', 1]]))
+    let fn = vi.fn(() => {
+      for (const item of notCallMap.keys()) {
+        console.log(item)
+      }
+    })
+    effect(fn)
+    expect(fn).toBeCalledTimes(1)
+    notCallMap.set('foo', 2)
+    expect(fn).toBeCalledTimes(1)
   })
 })
