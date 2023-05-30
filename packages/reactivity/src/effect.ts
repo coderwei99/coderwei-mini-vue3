@@ -5,7 +5,10 @@ let activeEffect
 let effectStack: EffectDepend[] = []
 let shouldTrack: boolean = false
 let trackStack: boolean[] = []
+
 export const ITERATE_KEY = Symbol('iterate')
+export const MapITERATE_KEY = Symbol('map_iterate')
+
 export const enum TriggerType {
   ADD = 'add',
   SET = 'set',
@@ -198,6 +201,15 @@ export function trigger(target, key, type?: TriggerType, newVal?) {
         })
       }
     })
+  }
+
+  // map类型 并且是keys方法 且只有当新增或者删除的时候才会触发
+  if ((type === TriggerType.ADD || type === TriggerType.DELETE) && toRawType(target) === 'Map') {
+    const deps = depsMap?.get(MapITERATE_KEY)
+    deps &&
+      deps.forEach((_effect) => {
+        effectToRun.add(_effect)
+      })
   }
 
   triggerEffect(effectToRun)

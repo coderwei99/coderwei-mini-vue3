@@ -1,6 +1,17 @@
 import { isObject } from '@coderwei-mini-vue3/shared'
-import { enableTracking, ITERATE_KEY, pauseTracking, track, trigger, TriggerType } from './effect'
+import {
+  enableTracking,
+  ITERATE_KEY,
+  MapITERATE_KEY,
+  pauseTracking,
+  track,
+  trigger,
+  TriggerType
+} from './effect'
 import { reactive, ReactiveFlags } from './reactive'
+const wrap = (val) => (typeof val === 'object' ? reactive(val) : val)
+
+type IterableCollections = Map<any, any> | Set<any>
 
 const mutableInstrumentations = {
   add(key) {
@@ -46,12 +57,73 @@ const mutableInstrumentations = {
     return this
   },
   forEach(callback, thisArg) {
-    const wrap = (val) => (typeof val === 'object' ? reactive(val) : val)
     const target = this[ReactiveFlags.IS_RAW]
     track(target, ITERATE_KEY)
     target.forEach((v, k) => {
       callback.call(thisArg, wrap(v), wrap(k), this)
     })
+  },
+
+  // 迭代器
+  [Symbol.iterator]: iterationMethod,
+  entries: iterationMethod,
+  values: ValuesIterationMethod,
+  keys: keysIterationMethod
+}
+
+function iterationMethod(this: IterableCollections) {
+  const target = this[ReactiveFlags.IS_RAW]
+  track(target, ITERATE_KEY)
+  const iterator = target[Symbol.iterator]()
+  return {
+    next() {
+      const { value, done } = iterator.next()
+      return {
+        value: value ? [wrap(value[0]), wrap(value[1])] : value,
+        done
+      }
+    },
+    [Symbol.iterator]() {
+      return this
+    }
+  }
+}
+
+function ValuesIterationMethod(this: IterableCollections) {
+  const target = this[ReactiveFlags.IS_RAW]
+  track(target, ITERATE_KEY)
+  const iterator = target.values()
+
+  return {
+    next() {
+      const { value, done } = iterator.next()
+      return {
+        value: wrap(value),
+        done
+      }
+    },
+    [Symbol.iterator]() {
+      return this
+    }
+  }
+}
+
+function keysIterationMethod(this: IterableCollections) {
+  const target = this[ReactiveFlags.IS_RAW]
+  track(target, MapITERATE_KEY)
+  const iterator = target.keys()
+
+  return {
+    next() {
+      const { value, done } = iterator.next()
+      return {
+        value: wrap(value),
+        done
+      }
+    },
+    [Symbol.iterator]() {
+      return this
+    }
   }
 }
 
