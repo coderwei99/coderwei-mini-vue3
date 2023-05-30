@@ -4,6 +4,7 @@ import { arrayInstrumentations } from './baseHandlers'
 import { mutableCollectionHandlers } from './collectionHandlers'
 
 import { isArray, isObject, toRawType } from '@coderwei-mini-vue3/shared'
+import { isRef } from './ref'
 
 /**
  *
@@ -31,6 +32,11 @@ export function createGetter<T extends object>(isReadonly = false, isShallow = f
 
     if (isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
       return Reflect.get(arrayInstrumentations, key, receiver)
+    }
+
+    // 如果是ref 要进行解包
+    if (isRef(res)) {
+      return res.value
     }
 
     //  判断是否为嵌套对象 如果是嵌套对象并且isShallow为默认值false  根据isReadonly判断递归调用readonly还是reactive
