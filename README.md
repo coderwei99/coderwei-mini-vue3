@@ -73,7 +73,7 @@
 #### 代理Set
 - [x] 针对 Set 类型的 size 属性进行依赖收集与触发 
 - [x] 重写 Set 类型的 add & delete & forEach 方法 
-- [ ] 重写 Map 类型的迭代器方法 
+- [ ] 重写 Set 类型的迭代器方法 
 
 #### 代理Map
 - [x] 重写 Map 类型的 set & get & forEach 方法 
