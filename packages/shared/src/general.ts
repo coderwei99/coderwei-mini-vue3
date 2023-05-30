@@ -26,6 +26,12 @@ export function hasChanged(value, oldValue) {
 // 判断是否为数组
 export const isArray = Array.isArray
 
+// 判断是否是map
+export const isMap = (val: unknown) => toTypeString(val === '[object Map]')
+
+// 判断是否是set
+export const isSet = (val: unknown) => toTypeString(val === '[object Set]')
+
 // 判断某个key是否在指定对象上
 export const hasOwn = (target: any, key: any) => Object.prototype.hasOwnProperty.call(target, key)
 

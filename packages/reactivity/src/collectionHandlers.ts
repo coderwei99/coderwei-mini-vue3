@@ -1,4 +1,5 @@
 import { isObject } from '@coderwei-mini-vue3/shared'
+import { isMap } from 'util/types'
 import {
   enableTracking,
   ITERATE_KEY,
@@ -65,64 +66,31 @@ const mutableInstrumentations = {
   },
 
   // 迭代器
-  [Symbol.iterator]: iterationMethod,
-  entries: iterationMethod,
-  values: ValuesIterationMethod,
-  keys: keysIterationMethod
+  [Symbol.iterator]: createIterableMethod(Symbol.iterator),
+  entries: createIterableMethod('entries'),
+  values: createIterableMethod('values'),
+  keys: createIterableMethod('keys')
 }
 
-function iterationMethod(this: IterableCollections) {
-  const target = this[ReactiveFlags.IS_RAW]
-  track(target, ITERATE_KEY)
-  const iterator = target[Symbol.iterator]()
-  return {
-    next() {
-      const { value, done } = iterator.next()
-      return {
-        value: value ? [wrap(value[0]), wrap(value[1])] : value,
-        done
+function createIterableMethod(method: string | symbol) {
+  return function (this: IterableCollections, ...arg) {
+    const target = (this as any)[ReactiveFlags.IS_RAW]
+    const targetIsMap = isMap(target)
+    const isPair = method === 'entries' || (method === Symbol.iterator && targetIsMap)
+
+    // 收集依赖
+    track(target, targetIsMap ? MapITERATE_KEY : ITERATE_KEY)
+    const innerIterator = target[method](...arg)
+    return {
+      next() {
+        const { value, done } = innerIterator.next()
+        return done
+          ? { value, done }
+          : { value: isPair ? [wrap(value[0]), wrap(value[1])] : wrap(value), done }
+      },
+      [Symbol.iterator]() {
+        return this
       }
-    },
-    [Symbol.iterator]() {
-      return this
-    }
-  }
-}
-
-function ValuesIterationMethod(this: IterableCollections) {
-  const target = this[ReactiveFlags.IS_RAW]
-  track(target, ITERATE_KEY)
-  const iterator = target.values()
-
-  return {
-    next() {
-      const { value, done } = iterator.next()
-      return {
-        value: wrap(value),
-        done
-      }
-    },
-    [Symbol.iterator]() {
-      return this
-    }
-  }
-}
-
-function keysIterationMethod(this: IterableCollections) {
-  const target = this[ReactiveFlags.IS_RAW]
-  track(target, MapITERATE_KEY)
-  const iterator = target.keys()
-
-  return {
-    next() {
-      const { value, done } = iterator.next()
-      return {
-        value: wrap(value),
-        done
-      }
-    },
-    [Symbol.iterator]() {
-      return this
     }
   }
 }
@@ -150,6 +118,5 @@ function createInstrumentationGetter(isReadonly, isShallow) {
 
 // 集合类型的handles Set Map WeakMap WeakSet
 export const mutableCollectionHandlers = {
-  get: createInstrumentationGetter(false, false),
-  set() {}
+  get: createInstrumentationGetter(false, false)
 }
