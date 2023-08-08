@@ -1,4 +1,4 @@
-import { isArray, toRawType } from '@coderwei-mini-vue3/shared'
+import { isArray, isMap, toRawType } from '@coderwei-mini-vue3/shared'
 
 let activeEffect
 // 在嵌套effect的情况下
@@ -204,7 +204,7 @@ export function trigger(target, key, type?: TriggerType, newVal?) {
   }
 
   // map类型 并且是keys方法 且只有当新增或者删除的时候才会触发
-  if ((type === TriggerType.ADD || type === TriggerType.DELETE) && toRawType(target) === 'Map') {
+  if ((type === TriggerType.ADD || type === TriggerType.DELETE) && isMap(target)) {
     const deps = depsMap?.get(MapITERATE_KEY)
     deps &&
       deps.forEach((_effect) => {
