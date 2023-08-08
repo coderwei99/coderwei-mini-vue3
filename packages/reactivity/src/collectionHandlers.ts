@@ -1,4 +1,4 @@
-import { isObject } from '@coderwei-mini-vue3/shared'
+import { isMap, isObject } from '@coderwei-mini-vue3/shared'
 import {
   enableTracking,
   ITERATE_KEY,
